@@ -2650,7 +2650,11 @@ async function initPin() {
   }
 
   // update logo to shop name
-  if (cfg.shopName) document.getElementById('pinLogo').textContent = cfg.shopName;
+  
+  if (cfg.shopName) {
+    document.getElementById('pinLogo').textContent = cfg.shopName;
+    document.getElementById('topShopName').textContent = cfg.shopName;
+  }
 
   // check if already unlocked this session
   if (sessionStorage.getItem('dashUnlocked') === '1') {
