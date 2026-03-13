@@ -666,8 +666,13 @@ function applySettings(saved) {
   // work days & hours
   if(saved._workDays) MOON_CONFIG.WORK_DAYS = saved._workDays;
   if(saved._dayHours) localStorage.setItem('moonDayHours', JSON.stringify(saved._dayHours));
-  if(saved._blocks)   localStorage.setItem('moonBlocks',   JSON.stringify(saved._blocks));
-
+  if(saved._blocks){
+    localStorage.setItem('moonBlocks', JSON.stringify(saved._blocks));
+    // also keep moonCfg in sync so renderTimes() finds blocks either way
+    const cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+    cfg._blocks = saved._blocks;
+    localStorage.setItem('moonCfg', JSON.stringify(cfg));
+  }
   // rebuild TIMES
   const open    = MOON_CONFIG.OPEN_HOUR  || 9;
   const close   = MOON_CONFIG.CLOSE_HOUR || 18;
@@ -735,15 +740,9 @@ function applySettings(saved) {
   applyGallery();
   applyQuickText();
   applyWalkinMode();
- // render immediately from localStorage (instant)
-  renderSvcs();
-  renderDates();
-  renderTimes();
-  updateFooter();
-  // then fetch cloud in background and update
+ renderSvcs();
   await loadBookings();
   renderDates();
-  renderTimes();
   // auto-select today if it's in the date strip, else select the first available day
   if (!S.date) {
     const firstDay = document.querySelector('#dateStrip .dc');
