@@ -735,9 +735,15 @@ function applySettings(saved) {
   applyGallery();
   applyQuickText();
   applyWalkinMode();
- renderSvcs();
+ // render immediately from localStorage (instant)
+  renderSvcs();
+  renderDates();
+  renderTimes();
+  updateFooter();
+  // then fetch cloud in background and update
   await loadBookings();
   renderDates();
+  renderTimes();
   // auto-select today if it's in the date strip, else select the first available day
   if (!S.date) {
     const firstDay = document.querySelector('#dateStrip .dc');
