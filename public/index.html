@@ -740,21 +740,23 @@ function applySettings(saved) {
   applyGallery();
   applyQuickText();
   applyWalkinMode();
- renderSvcs();
+  renderSvcs();
+  // show loading until cloud data arrives
+  document.getElementById('dateStrip').innerHTML = '<div style="color:var(--dim);font-size:11px;letter-spacing:0.1em;padding:8px">Loading...</div>';
+  document.getElementById('timeGrid').innerHTML  = '<div style="color:var(--dim);font-size:11px;letter-spacing:0.1em;padding:8px">Loading...</div>';
   await loadBookings();
   renderDates();
-  // auto-select today if it's in the date strip, else select the first available day
+  renderTimes();
+  // auto-select first available day
   if (!S.date) {
     const firstDay = document.querySelector('#dateStrip .dc');
     if (firstDay) {
       const ds = firstDay.getAttribute('onclick').match(/'([^']+)'/)[1];
       S.date = ds;
-      renderDates(); // re-render to show selected state
+      renderDates();
+      renderTimes();
     }
   }
-  // re-render everything after cloud data is fully loaded
-  renderDates();
-  renderTimes();
   updateFooter();
 })();
 
