@@ -1,0 +1,10 @@
+name = "moon-sms"
+main = "sms-worker.js"
+compatibility_date = "2024-01-01"
+
+# After deploying, add these in the Cloudflare dashboard:
+# Workers → moon-sms → Settings → Variables
+#
+#   TWILIO_ACCOUNT_SID   = ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#   TWILIO_AUTH_TOKEN    = your_auth_token
+#   TWILIO_PHONE_NUMBER  = +15551234567

@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dashboard — Moon Cuts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+
+:root{
+  --ink:    #1a1410;
+  --ink2:   #2e2620;
+  --ink3:   #3d3328;
+  --paper:  #f5f0e8;
+  --paper2: #ede8dc;
+  --paper3: #e3ddd0;
+  --rule:   #d4cdc0;
+  --rule2:  #c8c0b0;
+  --dim:    #8a8070;
+  --dim2:   #b0a898;
+  --gold:   #b8860b;
+  --gold2:  #d4a017;
+  --green:  #2d6a3f;
+  --red:    #8b2525;
+  --blue:   #1a4a6e;
+  --cream:  #1a1410;
+  --font:   'Archivo', sans-serif;
+  --display:'Archivo Black', sans-serif;
+}
+
+body{
+  background:var(--paper2);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══ PIN ══ */
+#pinScreen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;
+}
+.pin-wordmark{
+  font-family:var(--display);font-size:3.5rem;
+  color:var(--paper);letter-spacing:-0.02em;
+  margin-bottom:4px;
+}
+.pin-tagline{
+  font-size:0.62rem;font-weight:300;letter-spacing:0.28em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:48px;
+}
+.pin-dots{display:flex;gap:16px;margin-bottom:40px}
+.pin-dot{
+  width:12px;height:12px;border-radius:50%;
+  background:var(--ink3);border:1px solid var(--ink3);
+  transition:all 0.18s;
+}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:260px}
+.pin-key{
+  background:var(--ink2);border:1px solid var(--ink3);border-radius:14px;
+  padding:22px 0;text-align:center;cursor:pointer;
+  font-family:var(--display);font-size:1.8rem;color:var(--paper);
+  transition:all 0.12s;user-select:none;
+}
+.pin-key:active{background:var(--ink3);transform:scale(0.92)}
+.pin-key.zero{grid-column:2}
+.pin-key.del{font-family:var(--font);font-size:1.3rem;color:var(--dim)}
+.pin-err{
+  margin-top:20px;min-height:20px;
+  font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--red);opacity:0;transition:opacity 0.2s;
+}
+.pin-err.show{opacity:1}
+
+/* ══ APP ══ */
+#app{display:none;flex-direction:column;min-height:100vh;padding-bottom:60px}
+#app.unlocked{display:flex}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  background:var(--ink);color:var(--paper);
+  padding:8px 14px 6px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+/* sb-logo-main used by JS to update shop name */
+.sb-logo-main{
+  font-family:var(--display);font-size:1.05rem;
+  letter-spacing:-0.01em;color:var(--paper);
+}
+.topbar-clock{
+  font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--dim);margin-top:1px;display:flex;gap:8px;
+}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.topbar-right a{text-decoration:none}
+/* topbarTitle used by JS — keep it, just hide it */
+#topbarTitle{display:none}
+.tb-pill{
+  background:var(--ink2);border:1px solid var(--ink3);border-radius:20px;
+  padding:5px 10px;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--dim2);cursor:pointer;transition:all 0.15s;white-space:nowrap;
+}
+.tb-pill:hover{color:var(--paper)}
+.tb-pill.accent{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+
+/* ══ PANELS ══ */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ══ BOTTOM NAV ══ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:60px;
+  background:var(--ink);border-top:1px solid var(--ink2);
+  display:flex;z-index:200;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+/* sb-item used by JS — keep class on nav items */
+.sb-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;cursor:pointer;
+  font-size:0.42rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--dim);transition:color 0.15s;border-top:2px solid transparent;
+}
+.sb-item.active{color:var(--paper);border-top-color:var(--gold)}
+.sb-icon{font-size:1.2rem;line-height:1}
+
+/* ══ STATS ══ */
+#statsRow{
+  display:flex;border-bottom:1px solid var(--rule);background:var(--paper);
+}
+.stat-card{
+  flex:1;padding:7px 10px;border-right:1px solid var(--rule);display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;
+}
+.stat-card:last-child{border-right:none}
+.stat-val{
+  font-family:var(--display);font-size:1.2rem;line-height:1;
+  color:var(--ink);white-space:nowrap;
+}
+.stat-val.gold{color:var(--gold)}
+.stat-lbl,.stat-label{
+  font-size:0.32rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--dim);
+}
+
+
+/* ══ SWIPE TO DELETE ══ */
+.swipe-wrap{position:relative;overflow:hidden;}
+.swipe-inner{
+  position:relative;transition:transform 0.2s ease;
+  will-change:transform;touch-action:pan-y;
+}
+.swipe-del{
+  position:absolute;right:0;top:0;bottom:0;width:72px;
+  background:var(--red);display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:3px;cursor:pointer;
+  font-size:0.38rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#fff;
+  opacity:0;transition:opacity 0.15s;
+}
+.swipe-del svg{width:20px;height:20px;margin-bottom:1px}
+.swipe-wrap.swiped .swipe-del{opacity:1;}
+
+/* ══ SECTION HEADER ══ */
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;
+  background:var(--paper);border-bottom:1px solid var(--rule);
+}
+.sec-hdr-title{
+  font-family:var(--display);font-size:1.0rem;letter-spacing:-0.01em;color:var(--ink);white-space:nowrap;
+}
+.sec-hdr-sub{font-size:0.4rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-top:1px}
+.day-nav{display:flex;gap:6px}
+.sched-arrow{
+  background:var(--paper2);border:1px solid var(--rule);border-radius:8px;
+  padding:6px 12px;font-size:0.46rem;font-weight:500;letter-spacing:0.06em;
+  color:var(--dim);cursor:pointer;transition:all 0.15s;
+}
+.sched-arrow:hover{background:var(--paper3);color:var(--ink)}
+.sched-arrow:first-child,.sched-arrow:last-child{font-size:0.9rem;padding:6px 10px}
+
+/* ══ SCHEDULE SLOTS ══ */
+.time-slot-list{background:var(--paper2)}
+.time-slot{
+  display:flex;align-items:stretch;
+  border-bottom:1px solid var(--rule);background:var(--paper);
+}
+.time-slot:last-child{border-bottom:none}
+
+/* time column */
+.ts-time{
+  width:66px;flex-shrink:0;
+  padding:12px 0 10px 14px;
+  font-size:0.6rem;font-weight:500;letter-spacing:0.03em;
+  color:var(--dim);text-transform:uppercase;
+}
+
+/* content column */
+.ts-content{flex:1;padding:12px 12px 12px 0;min-width:0}
+
+/* open slot */
+.ts-open{
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--dim);padding-top:4px;opacity:0.45;
+}
+
+/* booked slot */
+.time-slot.booked{background:#fff}
+.ts-client-name{
+  font-family:var(--display);font-size:1.15rem;letter-spacing:-0.01em;
+  color:var(--ink);line-height:1;margin-bottom:3px;
+}
+.ts-svc-line{
+  font-size:0.58rem;letter-spacing:0.04em;
+  color:var(--dim);margin-bottom:6px;
+}
+.ts-actions{display:flex;gap:5px;flex-wrap:wrap;padding-bottom:2px}
+
+/* blocked */
+.time-slot.blocked{background:var(--paper2)}
+.ts-blocked{
+  font-size:0.46rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--dim2);font-style:italic;padding-top:4px;
+}
+
+/* past dimmed */
+.time-slot.past{opacity:0.4}
+
+/* action buttons */
+.act-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:16px;padding:5px 10px;
+  font-size:0.42rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;border:1px solid var(--rule);background:var(--paper2);color:var(--dim);
+  transition:all 0.12s;white-space:nowrap;
+}
+.act-btn:active{transform:scale(0.94)}
+.act-btn.confirm{border-color:#8fc29a;color:var(--green);background:#f0f8f2}
+.act-btn.confirm.sent{color:#9aaf9f;border-color:#c8dece;cursor:default}
+.act-btn.reschedule{border-color:#d4b86a;color:var(--gold);background:#fdf8ee}
+.act-btn.done{border-color:#8ab0c8;color:var(--blue);background:#f0f4f8}
+.act-btn.cancel-text{border-color:#d09090;color:var(--red);background:#fdf2f2}
+.act-btn.cancel-silent{color:var(--dim2);border-color:var(--rule)}
+.act-btn.cancel-silent:hover{color:var(--red)}
+
+/* remind banner */
+#remindBanner{
+  margin:8px 14px;padding:12px 16px;
+  background:#fdf8ee;border:1.5px solid #d4b86a;border-radius:10px;
+  display:none;align-items:center;justify-content:space-between;gap:12px;
+}
+#remindText{font-size:0.75rem;font-weight:600;letter-spacing:0.02em;color:var(--ink)}
+#btnRemindAll{
+  background:var(--ink);color:var(--paper);border:none;border-radius:8px;
+  padding:9px 16px;font-size:0.55rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;white-space:nowrap;
+}
+
+/* empty */
+.empty-state{
+  padding:60px 24px;text-align:center;
+}
+.empty-icon{font-size:2.5rem;margin-bottom:14px;opacity:0.3}
+.empty-label{
+  font-size:0.52rem;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--dim);
+}
+
+/* ══ BOOKINGS ══ */
+.search-bar{
+  padding:12px 20px;background:var(--paper);border-bottom:1px solid var(--rule);
+}
+.search-bar input{
+  width:100%;background:var(--paper2);border:1.5px solid var(--rule);border-radius:24px;
+  padding:10px 16px;font-family:var(--font);font-size:0.9rem;
+  color:var(--ink);outline:none;
+}
+.search-bar input::placeholder{color:var(--dim2)}
+.search-bar input:focus{border-color:var(--ink)}
+
+/* booking rows */
+.bk-row{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;border-bottom:1px solid var(--rule);
+  background:var(--paper);cursor:pointer;transition:background 0.12s;
+}
+.bk-row:hover{background:var(--paper2)}
+.bk-dot{
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
+}
+.bk-dot.confirmed{background:var(--green)}
+.bk-dot.cancelled{background:var(--red)}
+.bk-dot.completed{background:var(--blue)}
+.bk-dot.other{background:var(--dim2)}
+.bk-info{flex:1;min-width:0}
+.bk-name{
+  font-family:var(--display);font-size:1.1rem;letter-spacing:-0.01em;
+  color:var(--ink);line-height:1;margin-bottom:3px;
+}
+.bk-sub{font-size:0.46rem;letter-spacing:0.08em;color:var(--dim)}
+.bk-right{text-align:right;flex-shrink:0}
+.bk-price{font-family:var(--display);font-size:1.2rem;color:var(--ink)}
+.bk-date{font-size:0.44rem;letter-spacing:0.06em;color:var(--dim);margin-top:2px}
+.bk-status-lbl{
+  font-size:0.38rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;
+}
+.bk-status-lbl.confirmed{color:var(--green)}
+.bk-status-lbl.cancelled{color:var(--red)}
+.bk-status-lbl.completed{color:var(--blue)}
+
+/* ══ CLIENTS ══ */
+.cl-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;border-bottom:1px solid var(--rule);
+  background:var(--paper);cursor:pointer;transition:background 0.12s;
+}
+.cl-row:hover{background:var(--paper2)}
+.cl-avatar{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:1.1rem;color:var(--paper);flex-shrink:0;
+}
+.cl-info{flex:1;min-width:0}
+.cl-name{font-family:var(--display);font-size:1.1rem;letter-spacing:-0.01em;color:var(--ink);margin-bottom:2px}
+.cl-phone{font-size:0.46rem;letter-spacing:0.06em;color:var(--dim)}
+.cl-visits-wrap{text-align:right}
+.cl-count{font-family:var(--display);font-size:1.6rem;color:var(--gold)}
+.cl-count-lbl{font-size:0.4rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+
+/* ══ AVAILABILITY ══ */
+.avail-section{
+  background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:16px 20px;
+}
+.avail-title{
+  font-family:var(--display);font-size:1rem;color:var(--ink);margin-bottom:4px;
+}
+.avail-hint{font-size:0.46rem;letter-spacing:0.06em;color:var(--dim);margin-bottom:14px;line-height:1.6}
+
+/* days toggle grid */
+#daysGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day-tog{
+  border:1.5px solid var(--rule);border-radius:8px;
+  padding:10px 4px;text-align:center;cursor:pointer;background:var(--paper2);
+  transition:all 0.15s;
+}
+.day-tog.on{background:#f0f8f2;border-color:#8fc29a}
+.day-tog-name{font-size:0.38rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
+.day-tog-dot{width:6px;height:6px;border-radius:50%;background:var(--rule);margin:0 auto;transition:all 0.15s}
+.day-tog.on .day-tog-name{color:var(--green)}
+.day-tog.on .day-tog-dot{background:var(--green)}
+
+/* slot length */
+#slotLengthBtns{display:flex;gap:8px;flex-wrap:wrap}
+/* JS uses .btn class to toggle .btn-primary / .btn-ghost */
+.btn{
+  border-radius:20px;padding:9px 18px;
+  font-family:var(--font);font-size:0.52rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.15s;border:1.5px solid var(--rule);background:var(--paper2);color:var(--dim);
+}
+.btn-primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-ghost{background:var(--paper2);color:var(--dim);border-color:var(--rule)}
+
+/* block form */
+.block-form{padding:16px 20px;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bf-label{font-size:0.44rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:block}
+.bf-input{
+  width:100%;background:var(--paper2);border:1.5px solid var(--rule);border-radius:8px;
+  padding:10px 12px;font-family:var(--font);font-size:0.88rem;color:var(--ink);outline:none;
+}
+.bf-input:focus{border-color:var(--ink)}
+.bf-input::placeholder{color:var(--dim2)}
+.bf-select{
+  background:var(--paper2);border:1.5px solid var(--rule);border-radius:8px;
+  padding:10px 12px;font-family:var(--font);font-size:0.88rem;color:var(--ink);outline:none;
+}
+.bf-group{margin-bottom:12px}
+
+/* quick block buttons */
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.preset-btn{
+  background:var(--paper2);border:1.5px solid var(--rule);border-radius:20px;
+  padding:8px 14px;font-size:0.48rem;font-weight:500;letter-spacing:0.08em;
+  color:var(--dim);cursor:pointer;transition:all 0.15s;
+}
+.preset-btn:hover{background:var(--paper3);color:var(--ink)}
+
+.block-list{background:var(--paper)}
+.block-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;border-bottom:1px solid var(--rule);gap:12px;
+}
+.block-date-label{font-size:0.5rem;font-weight:500;letter-spacing:0.06em;color:var(--ink)}
+.block-time-label{font-size:0.44rem;letter-spacing:0.06em;color:var(--dim)}
+.block-del-btn{
+  background:none;border:none;color:var(--dim2);font-size:1.2rem;
+  cursor:pointer;padding:4px;transition:color 0.15s;
+}
+.block-del-btn:hover{color:var(--red)}
+
+/* save button */
+.big-save{
+  display:block;width:calc(100% - 40px);margin:16px 20px;
+  background:var(--ink);color:var(--paper);border:none;border-radius:12px;
+  padding:15px 20px;font-family:var(--display);font-size:1.1rem;letter-spacing:0.05em;
+  cursor:pointer;transition:opacity 0.15s;text-align:center;
+}
+.big-save:hover{opacity:0.88}
+.big-save.secondary{background:transparent;color:var(--dim);border:1.5px solid var(--rule)}
+
+/* ══ SETTINGS ══ */
+.settings-preview-bar{
+  background:#fdf8ee;border-bottom:1.5px solid #e8d080;
+  padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
+}
+.settings-preview-bar span{font-size:0.5rem;font-weight:500;letter-spacing:0.08em;color:var(--gold)}
+.settings-preview-bar a{text-decoration:none}
+.preview-btn{
+  background:var(--gold);color:#fff;border:none;border-radius:20px;
+  padding:8px 16px;font-size:0.5rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;
+}
+
+/* settings tab bar */
+.stab-bar{
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:0 20px;gap:0;
+}
+.stab-bar::-webkit-scrollbar{display:none}
+/* .stab class used by JS */
+.stab{
+  flex-shrink:0;padding:14px 14px 12px;
+  font-size:0.46rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all 0.15s;
+}
+.stab.active{color:var(--ink);border-bottom-color:var(--gold)}
+
+/* stab-panel used by JS */
+.stab-panel{display:none}
+.stab-panel.active{display:block}
+
+/* config sections */
+.cfg-section{
+  padding:14px 20px 8px;background:var(--paper2);
+  font-size:0.4rem;font-weight:600;letter-spacing:0.28em;text-transform:uppercase;color:var(--dim);
+  border-bottom:1px solid var(--rule);
+}
+.block-form.settings-row{padding:14px 20px;background:var(--paper)}
+.settings-row .bf-group:last-child{margin-bottom:0}
+
+/* toggle */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.toggle-info .tl{font-size:0.54rem;font-weight:500;color:var(--ink);letter-spacing:0.02em}
+.toggle-info .td{font-size:0.44rem;letter-spacing:0.04em;color:var(--dim);margin-top:3px;line-height:1.5}
+.tog{
+  width:46px;height:26px;border-radius:13px;
+  background:var(--paper2);border:1.5px solid var(--rule);
+  position:relative;cursor:pointer;flex-shrink:0;transition:all 0.2s;
+}
+.tog::after{
+  content:'';position:absolute;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--dim2);top:3px;left:3px;transition:all 0.2s;
+}
+.tog.on{background:#e6f4ea;border-color:#8fc29a}
+.tog.on::after{background:var(--green);transform:translateX(20px)}
+
+/* range */
+.range-wrap{display:flex;align-items:center;gap:10px;margin-top:8px}
+.range-wrap input[type=range]{flex:1;accent-color:var(--gold)}
+.range-val{font-family:var(--display);font-size:1.1rem;color:var(--ink);min-width:36px;text-align:right}
+
+/* theme grid */
+/* theme grid — classes emitted by renderThemeGrid() */
+.theme-grid{padding:14px 20px}
+.theme-group-label{font-size:0.4rem;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.theme-grid-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.theme-card{
+  border-radius:10px;padding:12px 8px 10px;cursor:pointer;text-align:center;
+  border:2px solid transparent;transition:all 0.15s;
+}
+.theme-card.active{border-color:var(--gold)!important}
+.theme-card-name{font-size:0.5rem;font-weight:700;letter-spacing:0.04em;margin-bottom:2px}
+.theme-card-desc{font-size:0.38rem;letter-spacing:0.06em;margin-bottom:8px}
+.theme-card-dots{display:flex;gap:4px;justify-content:center}
+.theme-card-dot{width:8px;height:8px;border-radius:50%}
+
+/* font grid — classes emitted by renderFontGrid() */
+.font-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 20px}
+.font-card{
+  background:var(--paper2);border:2px solid var(--rule);border-radius:10px;
+  padding:14px 10px;cursor:pointer;text-align:center;transition:all 0.15s;
+}
+.font-card.active{border-color:var(--gold);background:#fdf8ee}
+.font-card-name{font-size:1.4rem;color:var(--ink);margin-bottom:4px;line-height:1.2}
+.font-card-desc{font-size:0.38rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+
+/* swatch row */
+.swatch-row{display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px}
+.swatch{
+  width:34px;height:34px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:all 0.15s;
+}
+.swatch.active{border-color:var(--ink)!important;transform:scale(1.15)}
+.color-custom{display:flex;align-items:center;gap:10px;padding:0 20px 14px}
+.color-preview{width:34px;height:34px;border-radius:50%;border:2px solid var(--rule);flex-shrink:0}
+
+/* service editor */
+.svc-editor-list{background:var(--paper)}
+.svc-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 20px;border-bottom:1px solid var(--rule);
+}
+.svc-name{font-family:var(--display);font-size:1.05rem;flex:1;color:var(--ink)}
+.svc-price{font-family:var(--display);font-size:1.1rem;color:var(--ink)}
+.svc-dur{font-size:0.42rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);min-width:36px;text-align:right}
+.svc-del{background:none;border:none;font-size:1.1rem;color:var(--dim2);cursor:pointer;padding:4px;transition:color 0.15s}
+.svc-del:hover{color:var(--red)}
+
+/* add service form */
+.add-svc-btn{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--ink);color:var(--paper);border:none;border-radius:10px;
+  padding:0 16px;height:40px;font-family:var(--display);font-size:0.85rem;
+  letter-spacing:0.04em;cursor:pointer;transition:opacity 0.15s;white-space:nowrap;width:100%;
+}
+.add-svc-btn:hover{opacity:0.85}
+.add-svc-form{
+  display:grid;grid-template-columns:1fr 80px 90px auto;gap:8px;align-items:end;
+  padding:14px 20px;background:var(--paper);border-bottom:1px solid var(--rule);
+}
+
+/* copy rows */
+.copy-row{
+  padding:12px 20px;border-bottom:1px solid var(--rule);background:var(--paper);
+  display:flex;flex-direction:column;gap:6px;
+}
+.copy-default{font-size:0.42rem;letter-spacing:0.06em;color:var(--dim);font-style:italic}
+
+/* reviews */
+.review-item{
+  padding:12px 20px;border-bottom:1px solid var(--rule);background:var(--paper);
+  display:flex;flex-direction:column;gap:3px;
+}
+.review-stars{color:var(--gold);font-size:0.8rem}
+.review-text{font-size:0.52rem;color:var(--dim);line-height:1.5}
+.review-author{font-size:0.42rem;letter-spacing:0.1em;color:var(--dim2)}
+
+/* modal */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(26,20,16,0.6);
+  z-index:5000;display:none;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+.modal-bg.show,.modal-bg.open{display:flex}
+.modal{
+  background:var(--paper);width:100%;max-width:500px;
+  border-radius:20px 20px 0 0;
+  max-height:82vh;overflow-y:auto;
+  padding-bottom:env(safe-area-inset-bottom,20px);
+}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--rule2);margin:12px auto 0}
+.modal-hdr{
+  padding:16px 20px 14px;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-title{font-family:var(--display);font-size:1.3rem;letter-spacing:-0.01em;color:var(--ink)}
+.modal-close{
+  background:none;border:none;font-size:1.2rem;color:var(--dim);cursor:pointer;padding:4px;
+}
+.modal-body{padding:16px 20px}
+.modal-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:9px 0;border-bottom:1px solid var(--rule);gap:12px;
+}
+.modal-row:last-child{border-bottom:none}
+.modal-row .k{font-size:0.42rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);flex-shrink:0}
+.modal-row .v{font-size:0.52rem;letter-spacing:0.04em;color:var(--ink);text-align:right}
+.modal-footer{
+  padding:14px 20px;border-top:1px solid var(--rule);
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+
+/* badges */
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:0.42rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase}
+.badge-green{background:#e6f4ea;color:var(--green);border:1px solid #8fc29a}
+.badge-red{background:#fdf2f2;color:var(--red);border:1px solid #d09090}
+.badge-blue{background:#eef4f8;color:var(--blue);border:1px solid #8ab0c8}
+.badge-dim{background:var(--paper2);color:var(--dim);border:1px solid var(--rule)}
+
+/* toast */
+.toast{
+  position:fixed;bottom:96px;left:50%;
+  transform:translateX(-50%) translateY(6px);
+  background:var(--ink);color:var(--paper);
+  border-radius:24px;padding:11px 20px;
+  font-size:0.52rem;font-weight:500;letter-spacing:0.08em;
+  z-index:9999;opacity:0;pointer-events:none;
+  transition:all 0.22s;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:#8b2525}
+.toast.ok{background:var(--green)}
+
+/* warn/info boxes */
+.info-box{
+  margin:14px 20px;padding:12px 14px;background:#fdf8ee;
+  border:1.5px solid #e8d080;border-radius:10px;
+  font-size:0.46rem;letter-spacing:0.06em;color:var(--gold);line-height:1.7;
+}
+.warn-box{
+  margin:14px 20px;padding:12px 14px;background:#fdf2f2;
+  border:1.5px solid #e0a0a0;border-radius:10px;
+  font-size:0.46rem;letter-spacing:0.06em;color:var(--red);line-height:1.7;
+}
+
+/* pin change grid */
+.pin-change-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+
+/* vacation preview */
+.vaca-preview-box{
+  margin:14px 20px;padding:20px;background:var(--paper2);
+  border:1px solid var(--rule);border-radius:12px;text-align:center;
+}
+
+/* ── DAY CARD GRID (rendered by JS) ── */
+.day-card-list{display:flex;flex-direction:column;gap:8px}
+.day-card{background:var(--paper2);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;transition:all 0.15s}
+.day-card.on{background:var(--paper);border-color:var(--rule2)}
+.day-card-top{display:flex;align-items:center;gap:10px}
+.day-card-toggle{
+  width:38px;height:22px;border-radius:11px;
+  background:var(--rule);border:1.5px solid var(--rule2);
+  position:relative;cursor:pointer;flex-shrink:0;transition:all 0.2s;
+}
+.day-card-toggle::after{
+  content:'';position:absolute;width:14px;height:14px;border-radius:50%;
+  background:#fff;top:3px;left:3px;transition:all 0.2s;
+}
+.day-card-toggle.on{background:#8fc29a;border-color:#6aad7c}
+.day-card-toggle.on::after{transform:translateX(16px)}
+.day-card-name{font-family:var(--display);font-size:1rem;color:var(--ink);flex:1}
+.day-card-status{font-size:0.44rem;letter-spacing:0.08em;color:var(--dim2)}
+.day-card-status.open{color:var(--green)}
+.day-card-hours{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)}
+.dh-sel{background:var(--paper2);border:1.5px solid var(--rule);border-radius:6px;padding:7px 10px;font-family:var(--font);font-size:0.82rem;color:var(--ink);outline:none;flex:1}
+.svc-row{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--rule);background:var(--paper)}
+/* qt-row for quick text modal */
+.qt-row{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.12s;border-radius:4px}
+.qt-row:last-child{border-bottom:none}
+.qt-row:hover{background:var(--paper2)}
+.qt-label{font-size:0.54rem;font-weight:500;color:var(--ink);margin-bottom:3px;letter-spacing:0.04em}
+.qt-preview{font-size:0.44rem;letter-spacing:0.04em;color:var(--dim);line-height:1.5}
+
+/* ── THEME GRID (JS renders these classes) ── */
+.theme-grid{padding:14px 20px 4px}
+.theme-group-label{font-size:0.4rem;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;margin-top:4px}
+.theme-grid-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.theme-card{border-radius:10px;padding:10px 6px 8px;cursor:pointer;text-align:center;border:2px solid transparent;transition:all 0.15s}
+.theme-card.active{outline:2px solid var(--gold);outline-offset:2px}
+.theme-card-name{font-size:0.48rem;font-weight:700;letter-spacing:0.02em;margin-bottom:2px;line-height:1.2}
+.theme-card-desc{font-size:0.35rem;letter-spacing:0.04em;margin-bottom:7px;line-height:1.3;opacity:0.8}
+.theme-card-dots{display:flex;gap:4px;justify-content:center}
+.theme-card-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── FONT GRID (JS renders these classes) ── */
+.font-card{background:var(--paper2);border:2px solid var(--rule);border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center;transition:all 0.15s}
+.font-card.active{border-color:var(--gold);background:#fdf8ee}
+.font-card-name{font-size:1.4rem;color:var(--ink);margin-bottom:4px;line-height:1.2}
+.font-card-desc{font-size:0.38rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+
+/* ── SWATCH active state (JS uses .active not .sel) ── */
+.swatch.active{border-color:var(--ink)!important;transform:scale(1.15)}
+
+/* ── stat-label alias (JS emits stat-label, CSS only had stat-lbl) ── */
+.stat-label{font-size:0.45rem;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ PIN SCREEN ══ -->
+<div id="pinScreen">
+  <div class="pin-wordmark" id="pinLogo">Moon Cuts</div>
+  <div class="pin-tagline">Barber Dashboard</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-pad">
+    <div class="pin-key" onclick="pinKey('1')">1</div>
+    <div class="pin-key" onclick="pinKey('2')">2</div>
+    <div class="pin-key" onclick="pinKey('3')">3</div>
+    <div class="pin-key" onclick="pinKey('4')">4</div>
+    <div class="pin-key" onclick="pinKey('5')">5</div>
+    <div class="pin-key" onclick="pinKey('6')">6</div>
+    <div class="pin-key" onclick="pinKey('7')">7</div>
+    <div class="pin-key" onclick="pinKey('8')">8</div>
+    <div class="pin-key" onclick="pinKey('9')">9</div>
+    <div class="pin-key zero" onclick="pinKey('0')">0</div>
+    <div class="pin-key del" onclick="pinDel()">⌫</div>
+  </div>
+  <div class="pin-err" id="pinError"></div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="sb-logo-main" id="topShopName">Dashboard</div>
+      <div class="topbar-clock">
+        <span id="sbTime"></span>
+        <span>·</span>
+        <span id="sbDate"></span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- topbarTitle hidden but kept for JS compat -->
+      <span id="topbarTitle" style="display:none"></span>
+      <div class="tb-pill" onclick="loadData()">↻ Refresh</div>
+      <a href="index.html" target="_blank"><div class="tb-pill accent">Booking Page ↗</div></a>
+    </div>
+  </div>
+
+  <!-- ══ SCHEDULE ══ -->
+  <div class="panel active" id="panel-schedule">
+    <div id="statsRow"></div>
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-hdr-title" id="schedTitle">Today</div>
+        <div class="sec-hdr-sub" id="schedSub"></div>
+      </div>
+      <div class="day-nav">
+        <div class="sched-arrow" onclick="shiftDay(-1)">←</div>
+        <div class="sched-arrow" onclick="shiftDay(0)">Today</div>
+        <div class="sched-arrow" onclick="shiftDay(1)">→</div>
+        <div class="sched-arrow" onclick="openManualBooking()" style="background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:700">+ Add</div>
+      </div>
+    </div>
+    <div id="remindBanner" style="display:none">
+      <div id="remindText"></div>
+      <button id="btnRemindAll" onclick="remindAllTomorrow()">📱 Remind All</button>
+    </div>
+    <div class="time-slot-list" id="slotList"></div>
+  </div>
+
+  <!-- ══ BOOKINGS ══ -->
+  <div class="panel" id="panel-bookings">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-hdr-title">All Bookings</div>
+        <div class="sec-hdr-sub" id="bookingCount"></div>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="bookingSearch" placeholder="Search name, service, date…" oninput="renderBookings()">
+    </div>
+    <div id="bookingBody"></div>
+  </div>
+
+  <!-- ══ CLIENTS ══ -->
+  <div class="panel" id="panel-clients">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-hdr-title">Clients</div>
+        <div class="sec-hdr-sub" id="clientCount"></div>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="clientSearch" placeholder="Search name or phone…" oninput="renderClients()">
+    </div>
+    <div id="clientGrid"></div>
+  </div>
+
+  <!-- ══ AVAILABILITY ══ -->
+  <div class="panel" id="panel-availability">
+    <div class="sec-hdr"><div class="sec-hdr-title">Hours & Schedule</div></div>
+
+    <div class="avail-section">
+      <div class="avail-title">Work Days</div>
+      <div class="avail-hint">Tap to turn each day on or off</div>
+      <div id="daysGrid"></div>
+    </div>
+
+    <div class="avail-section">
+      <div class="avail-title">Appointment Length</div>
+      <div class="avail-hint">How long each slot appears on your booking page</div>
+      <div id="slotLengthBtns">
+        <button class="btn btn-ghost" onclick="setSlotLen(15,this)">15 min</button>
+        <button class="btn btn-ghost" onclick="setSlotLen(30,this)">30 min</button>
+        <button class="btn btn-ghost" onclick="setSlotLen(45,this)">45 min</button>
+        <button class="btn btn-ghost" onclick="setSlotLen(60,this)">60 min</button>
+      </div>
+    </div>
+    <button class="big-save" onclick="saveWorkDays()">Save Work Days ✓</button>
+
+    <div class="sec-hdr" style="margin-top:8px"><div class="sec-hdr-title">Block Off Time</div></div>
+    <div class="block-form">
+      <div class="bf-group">
+        <label class="bf-label">Date</label>
+        <input class="bf-input" type="date" id="blockDate" style="width:180px">
+      </div>
+      <div class="bf-label" style="margin-bottom:8px">Quick block</div>
+      <div class="preset-row">
+        <div class="preset-btn" onclick="applyPreset('morning')">🌅 Morning off</div>
+        <div class="preset-btn" onclick="applyPreset('lunch')">🥪 Lunch break</div>
+        <div class="preset-btn" onclick="applyPreset('afternoon')">🌇 Afternoon off</div>
+        <div class="preset-btn" onclick="applyPreset('fullday')">🚫 Full day off</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="bf-group" style="margin-bottom:0">
+          <label class="bf-label">From</label>
+          <select class="bf-select" id="blockFrom" style="width:100%"></select>
+        </div>
+        <div class="bf-group" style="margin-bottom:0">
+          <label class="bf-label">To</label>
+          <select class="bf-select" id="blockTo" style="width:100%"></select>
+        </div>
+      </div>
+      <div class="bf-group">
+        <label class="bf-label">Reason (optional)</label>
+        <input class="bf-input" type="text" id="blockReason" placeholder="e.g. lunch, personal…">
+      </div>
+      <button class="big-save" onclick="addBlock()" style="margin:4px 0 0">Add Block</button>
+    </div>
+    <div class="block-list" id="blockList"></div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="panel" id="panel-settings">
+    <div class="settings-preview-bar">
+      <span>Make changes, then preview your booking page</span>
+      <a href="index.html" target="_blank"><button class="preview-btn">Preview ↗</button></a>
+    </div>
+    <div class="sec-hdr" style="border-bottom:none;padding-bottom:0">
+      <div class="sec-hdr-title">Settings</div>
+      <div class="sec-hdr-sub">Changes save when you tap Save</div>
+    </div>
+
+    <!-- Tab bar — .stab class required by JS -->
+    <div class="stab-bar">
+      <div class="stab active" onclick="showStab('shop',this)">My Shop</div>
+      <div class="stab" onclick="showStab('services',this)">Services</div>
+      <div class="stab" onclick="showStab('appearance',this)">Look & Feel</div>
+      <div class="stab" onclick="showStab('rules',this)">Rules</div>
+      <div class="stab" onclick="showStab('gallery',this)">Photos</div>
+      <div class="stab" onclick="showStab('reviews',this)">Reviews</div>
+      <div class="stab" onclick="showStab('vacation',this)">Vacation</div>
+      <div class="stab" onclick="showStab('keys',this)">Advanced</div>
+    </div>
+
+    <!-- TAB: SHOP -->
+    <div class="stab-panel active" id="stab-shop">
+      <div class="cfg-section">Your Info</div>
+      <div class="block-form settings-row">
+        <div class="bf-group"><label class="bf-label">Shop / Barber Name</label><input class="bf-input" id="cfgShopName" placeholder="e.g. Moon Cuts" oninput="livePreview()"></div>
+        <div class="bf-group"><label class="bf-label">Phone Number</label><input class="bf-input" id="cfgPhone" placeholder="+1 (805) 000-0000" type="tel"></div>
+        <div class="bf-group"><label class="bf-label">Instagram Handle</label><input class="bf-input" id="cfgInstagram" placeholder="@yourhandle"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Welcome Message (on booking page)</label><input class="bf-input" id="cfgWelcome" placeholder="e.g. Cuts & Fades — Book Online"></div>
+      </div>
+
+      <div class="cfg-section">Custom Confirmation Text</div>
+      <div class="block-form settings-row">
+        <div style="font-size:0.44rem;color:var(--dim);margin-bottom:10px;line-height:1.7;letter-spacing:0.04em">Use these placeholders: <span style="color:var(--gold)">{name} {service} {date} {time} {payment} {shop}</span></div>
+        <div class="bf-group" style="margin-bottom:0"><textarea class="bf-input" id="cfgCustomSms" rows="4" placeholder="Hey {name}! You're booked for {service} on {date} at {time}. — {shop}" style="resize:vertical"></textarea></div>
+      </div>
+
+      <div class="cfg-section">Payment Handles</div>
+      <div class="block-form settings-row">
+        <div style="font-size:0.44rem;color:var(--dim);margin-bottom:10px;line-height:1.7">Leave blank to hide that payment option</div>
+        <div class="bf-group"><label class="bf-label">💲 CashApp $tag</label><input class="bf-input" id="cfgCashapp" placeholder="$yourname"></div>
+        <div class="bf-group"><label class="bf-label">💙 Venmo @handle</label><input class="bf-input" id="cfgVenmo" placeholder="@yourname"></div>
+        <div class="bf-group"><label class="bf-label">🅿️ PayPal.me username</label><input class="bf-input" id="cfgPaypal" placeholder="yourname"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">🟡 Zelle (phone or email)</label><input class="bf-input" id="cfgZelle" placeholder="(805) 000-0000 or email"></div>
+      </div>
+      <button class="big-save" onclick="saveSettings()">Save My Info ✓</button>
+
+     <div class="cfg-section">Page Wording</div>
+      <div style="font-size:13px;color:var(--dim);padding:12px 20px;line-height:1.8">Replace the default text on your booking page. Leave blank to keep the defaults.</div>
+
+      <!-- Step 1 -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--paper)">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px">📋 Step 1 — Service</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Currently: <em>"What are we doing" / "Pick your cut"</em></div>
+        <label class="bf-label">Top line (small text above heading)</label>
+        <input class="bf-input" id="cpyS1top" placeholder="e.g. What are we doing" style="margin-bottom:8px">
+        <label class="bf-label">Main heading</label>
+        <input class="bf-input" id="cpyS1main" placeholder="e.g. Pick your cut">
+      </div>
+
+      <!-- Step 2 -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--paper)">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px">📅 Step 2 — Date & Time</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Currently: <em>"Pick your appointment" / "When you coming in?"</em></div>
+        <label class="bf-label">Top line</label>
+        <input class="bf-input" id="cpyS2top" placeholder="e.g. Pick your appointment" style="margin-bottom:8px">
+        <label class="bf-label">Main heading</label>
+        <input class="bf-input" id="cpyS2main" placeholder="e.g. When you coming in?">
+      </div>
+
+      <!-- Step 3 -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--paper)">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px">👤 Step 3 — Your Info</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Currently: <em>"Almost done" / "Who's getting fresh?"</em></div>
+        <label class="bf-label">Top line</label>
+        <input class="bf-input" id="cpyS3top" placeholder="e.g. Almost done" style="margin-bottom:8px">
+        <label class="bf-label">Main heading</label>
+        <input class="bf-input" id="cpyS3main" placeholder="e.g. Who's getting fresh?">
+      </div>
+
+      <!-- Step 4 -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--paper)">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px">✅ Step 4 — Confirm</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Currently: <em>"Review & confirm" / "Lock it in."</em></div>
+        <label class="bf-label">Top line</label>
+        <input class="bf-input" id="cpyS4top" placeholder="e.g. Review & confirm" style="margin-bottom:8px">
+        <label class="bf-label">Main heading</label>
+        <input class="bf-input" id="cpyS4main" placeholder="e.g. Lock it in.">
+      </div>
+
+      <!-- Info note -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--paper)">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px">💬 Info Note (Step 3)</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Currently: <em>"Moon will text you a confirmation when you book…"</em></div>
+        <label class="bf-label">Note text</label>
+        <textarea class="bf-input" id="cpyInfoNote" rows="3" placeholder="e.g. You'll get a text when you book. No app needed." style="resize:vertical"></textarea>
+      </div>
+
+      <button class="big-save" onclick="saveCopy()">Save Wording ✓</button>
+    </div>
+
+    <!-- TAB: SERVICES -->
+    <div class="stab-panel" id="stab-services">
+      <div class="cfg-section">Your Services</div>
+      <div class="svc-editor-list" id="svcEditorList"></div>
+      <div class="cfg-section">Add New Service</div>
+      <div class="add-svc-form">
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Name</label><input class="bf-input" id="newSvcName" placeholder="e.g. BRAID"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Price ($)</label><input class="bf-input" id="newSvcPrice" placeholder="35" type="number" min="0"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Duration</label>
+          <select class="bf-select" id="newSvcDur">
+            <option>15min</option><option>20min</option><option selected>30min</option>
+            <option>45min</option><option>60min</option><option>75min</option><option>90min</option>
+          </select>
+        </div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">&nbsp;</label><button class="add-svc-btn" onclick="addService()">+ Add Service</button></div>
+      </div>
+    </div>
+
+    <!-- TAB: APPEARANCE -->
+    <div class="stab-panel" id="stab-appearance">
+      <div class="cfg-section">Theme</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.7">Pick the overall feel of your booking page</div>
+      <div class="theme-grid" id="themeGrid"></div>
+      <div class="cfg-section">Accent Color</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.7">The highlight color on buttons and selections</div>
+      <div class="swatch-row" id="swatchRow"></div>
+      <div class="color-custom">
+        <div class="color-preview" id="colorPreview"></div>
+        <input class="bf-input" id="cfgAccent" placeholder="#c4a97d" style="width:120px" oninput="applyAccent(this.value)">
+        <span style="font-size:0.44rem;color:var(--dim)">Custom hex color</span>
+      </div>
+      <div class="cfg-section">Font</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.7">Heading style on your booking page</div>
+      <div class="font-grid" id="fontGrid"></div>
+      <button class="big-save" onclick="saveAppearance()">Save Look & Feel ✓</button>
+    </div>
+
+    <!-- TAB: RULES -->
+    <div class="stab-panel" id="stab-rules">
+      <div class="cfg-section">Cancellation</div>
+      <div class="block-form settings-row">
+        <div class="bf-label">How much notice to cancel?</div>
+        <div class="range-wrap">
+          <input type="range" min="1" max="48" value="2" id="cancelHours" oninput="document.getElementById('cancelVal').textContent=this.value+'h'">
+          <span class="range-val" id="cancelVal">2h</span>
+        </div>
+        <div style="font-size:0.44rem;color:var(--dim);margin-top:6px">Shown on confirmation text and booking page</div>
+      </div>
+
+      <div class="cfg-section">Daily Limit</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row" style="margin-bottom:12px">
+          <div class="toggle-info"><div class="tl">Max bookings per day</div><div class="td">Auto-blocks new bookings when limit is reached</div></div>
+          <div class="tog" id="togMaxDay" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Daily limit</label><input class="bf-input" id="cfgMaxDay" type="number" min="1" max="50" value="12" style="width:100px"></div>
+      </div>
+
+      <div class="cfg-section">Walk-In Button</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tl">Show "I'm here now" button</div><div class="td">Walk-ins tap it to text you instantly</div></div>
+          <div class="tog" id="togWalkin" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="cfg-section">Text Us Button</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tl">Show "Text us" button on booking page</div><div class="td">Clients can tap to message you directly</div></div>
+          <div class="tog on" id="togQuickText" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="cfg-section">SMS Reminders</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tl">Send day-before reminder</div><div class="td">Client gets a reminder text the evening before their appointment</div></div>
+          <div class="tog on" id="togReminder" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <button class="big-save" onclick="saveRules()">Save Rules ✓</button>
+    </div>
+
+    <!-- TAB: GALLERY -->
+    <div class="stab-panel" id="stab-gallery">
+      <div class="cfg-section">Photo Gallery</div>
+      <div class="block-form settings-row">
+        <div style="font-size:0.44rem;color:var(--dim);margin-bottom:10px;line-height:1.7">Paste image URLs one per line — shows as a scrollable strip on your booking page.<br>💡 Upload photos free at <a href="https://imgur.com" target="_blank" style="color:var(--gold)">imgur.com</a> then paste the link.</div>
+        <textarea class="bf-input" id="cfgPhotos" rows="6" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg" style="resize:vertical"></textarea>
+      </div>
+      <div class="cfg-section">About You</div>
+      <div class="block-form settings-row">
+        <label class="bf-label">Short bio (shown on booking page)</label>
+        <textarea class="bf-input" id="cfgAbout" rows="3" placeholder="e.g. 5 years cutting in the 805. Specializing in fades. Walk-ins welcome." style="resize:vertical"></textarea>
+      </div>
+      <button class="big-save" onclick="saveGallery()">Save Photos & Bio ✓</button>
+    </div>
+
+    <!-- TAB: REVIEWS -->
+    <div class="stab-panel" id="stab-reviews">
+      <div class="cfg-section">Client Reviews</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px;line-height:1.7">Reviews from clients show on your booking page to build trust with new clients.</div>
+      <div id="reviewsDashList"></div>
+      <button class="big-save secondary" onclick="loadDashReviews()" style="margin-top:8px">↻ Refresh Reviews</button>
+    </div>
+
+    <!-- TAB: VACATION -->
+    <div class="stab-panel" id="stab-vacation">
+      <div class="cfg-section">Vacation Mode</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row" style="margin-bottom:16px">
+          <div class="toggle-info"><div class="tl">Pause all bookings</div><div class="td">Clients see your message instead of the booking form</div></div>
+          <div class="tog" id="togVaca" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="bf-group"><label class="bf-label">Icon (emoji)</label><input class="bf-input" id="cfgVacaIcon" placeholder="✈️" style="width:80px;font-size:1.2rem"></div>
+        <div class="bf-group"><label class="bf-label">Title</label><input class="bf-input" id="cfgVacaTitle" placeholder="We'll be back."></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Message to clients</label><textarea class="bf-input" id="cfgVacaMsg" rows="3" placeholder="Taking a week off. Back on March 20th — can't wait to see you." style="resize:vertical"></textarea></div>
+      </div>
+      <button class="big-save" onclick="saveVacation()">Save Vacation ✓</button>
+    </div>
+
+    <!-- TAB: API KEYS / ADVANCED -->
+    <div class="stab-panel" id="stab-keys">
+      <div class="cfg-section">SMS (Twilio)</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tl">Send confirmation texts via Twilio</div><div class="td" style="color:#c07060">Keep OFF until your A2P campaign is approved</div></div>
+          <div class="tog" id="togSms" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="cfg-section">Dashboard PIN</div>
+      <div class="block-form settings-row">
+        <div style="font-size:0.44rem;color:var(--dim);margin-bottom:12px;line-height:1.7">Change your 4-digit PIN. Default is <strong style="color:var(--gold)">1234</strong> — change it now if you haven't.</div>
+        <div class="pin-change-row">
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">New PIN</label><input class="bf-input" id="newPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="letter-spacing:0.3em;font-size:1.1rem"></div>
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Confirm PIN</label><input class="bf-input" id="confirmPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="letter-spacing:0.3em;font-size:1.1rem"></div>
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">&nbsp;</label><button class="big-save" onclick="savePin()" style="margin:0;padding:10px 16px">Save</button></div>
+        </div>
+        <div class="warn-box" style="margin:12px 0 0">⚠ Write your PIN down. Master reset is <strong>0000</strong>.</div>
+      <div class="cfg-section" style="margin-top:16px">Reset Local Cache</div>
+      <div class="block-form settings-row">
+        <div style="font-size:0.44rem;color:var(--dim);margin-bottom:12px;line-height:1.7">If settings aren't updating on a device, clear its local cache. The device will re-sync from the cloud on next load.</div>
+        <button class="big-save" style="background:var(--red);margin:0" onclick="resetCache()">🗑 Clear Local Cache</button>
+      </div>
+      </div>
+
+      <div class="cfg-section">API Keys</div>
+      <div class="info-box" style="margin-bottom:0">⚠ These connect your booking system. Don't share them publicly.</div>
+      <div class="block-form settings-row">
+        <div class="bf-group"><label class="bf-label">JSONBin Bin ID</label><input class="bf-input" id="cfgBinId"></div>
+        <div class="bf-group"><label class="bf-label">JSONBin API Key</label><input class="bf-input" id="cfgBinKey" type="password"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">SMS Worker URL</label><input class="bf-input" id="cfgSms"></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:14px 20px;flex-wrap:wrap">
+        <button class="big-save" onclick="saveSettings()" style="flex:1;margin:0">Save Keys ✓</button>
+        <a href="https://jsonbin.io" target="_blank"><button class="big-save secondary" style="margin:0;padding:14px 16px">JSONBin ↗</button></a>
+        <a href="https://console.twilio.com" target="_blank"><button class="big-save secondary" style="margin:0;padding:14px 16px">Twilio ↗</button></a>
+      </div>
+    </div>
+
+  </div><!-- /settings panel -->
+
+</div><!-- /app -->
+
+<!-- ══ BOTTOM NAV — .sb-item class used by JS ══ -->
+<nav class="bottom-nav">
+  <div class="sb-item active" onclick="showPanel('schedule',this)"><span class="sb-icon">📅</span>Schedule</div>
+  <div class="sb-item" onclick="showPanel('bookings',this)"><span class="sb-icon">📋</span>Bookings</div>
+  <div class="sb-item" onclick="showPanel('clients',this)"><span class="sb-icon">👥</span>Clients</div>
+  <div class="sb-item" onclick="showPanel('availability',this)"><span class="sb-icon">🗓</span>Hours</div>
+  <div class="sb-item" onclick="showPanel('settings',this)"><span class="sb-icon">⚙️</span>Settings</div>
+</nav>
+
+<!-- ══ BOOKING DETAIL MODAL ══ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title" id="modalTitle">Booking</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+<!-- ══ MANUAL BOOKING MODAL ══ -->
+<div class="modal-bg" id="manualModal" onclick="if(event.target===this)closeManualModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title">+ Add Booking</div>
+      <button class="modal-close" onclick="closeManualModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="bf-group">
+        <label class="bf-label">Client Name</label>
+        <input class="bf-input" id="mbName" placeholder="First name" autocomplete="off">
+      </div>
+      <div class="bf-group">
+        <label class="bf-label">Phone Number</label>
+        <input class="bf-input" id="mbPhone" placeholder="+1 (805) 000-0000" type="tel" inputmode="tel">
+      </div>
+      <div class="bf-group">
+        <label class="bf-label">Service</label>
+        <select class="bf-select" id="mbService" style="width:100%"></select>
+      </div>
+      <div class="bf-group">
+        <label class="bf-label">Date</label>
+        <input class="bf-input" id="mbDate" type="date" style="width:180px">
+      </div>
+      <div class="bf-group" style="margin-bottom:0">
+        <label class="bf-label">Time</label>
+        <select class="bf-select" id="mbTime" style="width:100%"></select>
+      </div>
+      <div id="mbConflictWarn" style="display:none;margin-top:12px;padding:10px 14px;background:#fdf2f2;border:1.5px solid #e0a0a0;border-radius:8px;font-size:0.46rem;letter-spacing:0.06em;color:var(--red);line-height:1.7">
+        ⚠ That time slot is already booked. You can still save, but it will double-book.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="act-btn cancel-silent" onclick="closeManualModal()">Cancel</button>
+      <button class="act-btn confirm" onclick="saveManualBooking()" style="flex:1;justify-content:center;padding:12px">Save Booking</button>
+    </div>
+  </div>
+</div>
+<!-- ══ QUICK TEXT MODAL ══ -->
+<div class="modal-bg" id="qtModal" onclick="if(event.target===this)closeQT()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title">💬 Quick Text</div>
+      <button class="modal-close" onclick="closeQT()">✕</button>
+    </div>
+    <div class="modal-body" id="qtBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="config.js"></script>
+<script src="services.js"></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+let CFG = {
+  binId:        MOON_CONFIG.JSONBIN_BIN_ID,
+  binKey:       MOON_CONFIG.JSONBIN_API_KEY,
+  sms:          MOON_CONFIG.SMS_ENDPOINT,
+  shopName:     MOON_CONFIG.SHOP_NAME      || '',
+  phone:        MOON_CONFIG.SHOP_PHONE     || '',
+  instagram:    MOON_CONFIG.SHOP_INSTAGRAM || '',
+  welcome:      '',
+  cashapp:      MOON_CONFIG.CASHAPP        || '',
+  venmo:        MOON_CONFIG.VENMO          || '',
+  paypal:       MOON_CONFIG.PAYPAL         || '',
+  accent:       '#c4a97d',
+  bgTheme:      'smoke',
+  openHour:     MOON_CONFIG.OPEN_HOUR      || 9,
+  closeHour:    MOON_CONFIG.CLOSE_HOUR     || 18,
+  slotLen:      30,
+  cancelHours:  2,
+  maxDayEnabled:false,
+  maxDay:       12,
+  reminder:     true,
+  vacaOn:       false,
+  vacaIcon:     '✈️',
+  vacaTitle:    "We'll be back.",
+  vacaMsg:      'Bookings are paused right now. Check back soon.',
+  photos:       [],
+  about:        '',
+  customSms:    '',
+  walkinOn:     false,
+  quickTextOn:  true,
+  smsEnabled:   false,
+};
+
+// ── STATE ─────────────────────────────────────────────────
+// NOTE: SERVICES and TIMES are declared in services.js (loaded before this script)
+// They are const arrays that rebuildTimes() and saveServices() mutate in place.
+let DATA      = { bookings: [], clients: [] };
+let WORK_DAYS = [1,2,3,4,5,6];
+let BLOCKS    = [];
+let schedDay  = new Date();
+schedDay.setHours(0,0,0,0);
+
+// ── CLOCK ─────────────────────────────────────────────────
+function updateClock(){
+  const now = new Date();
+  document.getElementById('sbTime').textContent = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  document.getElementById('sbDate').textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── INIT ─────────────────────────────────────────────────
+(async () => {
+  await initPin(); // must be first — now async, fetches PIN from cloud if localStorage empty
+  // load saved settings
+  const saved = localStorage.getItem('moonCfg');
+  if (saved) {
+    const s = JSON.parse(saved);
+    // never let saved empty values overwrite the hardcoded keys in config.js
+    if (!s.binId)  delete s.binId;
+    if (!s.binKey) delete s.binKey;
+    Object.assign(CFG, s);
+  }
+
+  // load work days
+  const wd = localStorage.getItem('moonWorkDays');
+  if (wd) WORK_DAYS = JSON.parse(wd);
+  else WORK_DAYS = MOON_CONFIG.WORK_DAYS || [1,2,3,4,5,6];
+
+  // load per-day hours (legacy — no longer used, kept for compat)
+  const dh = localStorage.getItem('moonDayHours');
+  if (dh) DAY_HOURS = JSON.parse(dh);
+  // load blocks
+  const bl = localStorage.getItem('moonBlocks');
+  if (bl) BLOCKS = JSON.parse(bl);
+
+  await loadData();
+
+  // apply saved accent color immediately
+  if(CFG.accent) {
+    document.documentElement.style.setProperty('--gold', CFG.accent);
+    document.documentElement.style.setProperty('--gold2', CFG.accent);
+  }
+
+  // load saved services into SERVICES array
+  const savedSvcs = localStorage.getItem('moonServices');
+  if(savedSvcs){ SERVICES.length=0; JSON.parse(savedSvcs).forEach(s=>SERVICES.push(s)); }
+
+  // rebuild time slots from saved hours/slot length
+  rebuildTimes();
+
+  renderDaysGrid();
+  renderBlockSelects();
+  renderBlocks();
+  renderSettings();
+})();
+
+// ── DATA ──────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`,
+      { headers: { 'X-Master-Key': CFG.binKey } });
+    if (!r.ok) { toast('Could not load data', 'err'); return; }
+    const { record } = await r.json();
+    DATA = { bookings: record.bookings || [], clients: record.clients || [], settings: record.settings || {} };
+
+    // ── CLOUD SYNC ─────────────────────────────────────────
+    if (record.settings && Object.keys(record.settings).length) {
+      const s = record.settings;
+      if (!s.binId)  delete s.binId;
+      if (!s.binKey) delete s.binKey;
+      Object.assign(CFG, s);
+      localStorage.setItem('moonCfg', JSON.stringify(CFG));
+      // Work days & hours: cloud wins (these are set via dashboard UI)
+      if (s._workDays) { WORK_DAYS = s._workDays; localStorage.setItem('moonWorkDays', JSON.stringify(WORK_DAYS)); }
+      if (s._dayHours) { DAY_HOURS = s._dayHours; localStorage.setItem('moonDayHours', JSON.stringify(DAY_HOURS)); }
+      // BLOCKS: cloud wins — this is the source of truth for all devices
+      if (s._blocks) {
+        BLOCKS = s._blocks;
+        localStorage.setItem('moonBlocks', JSON.stringify(BLOCKS));
+      } else {
+        const localBlocks = localStorage.getItem('moonBlocks');
+        if (localBlocks) BLOCKS = JSON.parse(localBlocks);
+      }
+      // Services: same pattern — local wins, cloud is fallback
+      const localSvcs = localStorage.getItem('moonServices');
+      if (localSvcs) {
+        SERVICES.length = 0; JSON.parse(localSvcs).forEach(sv => SERVICES.push(sv));
+      } else if (s._services && s._services.length) {
+        localStorage.setItem('moonServices', JSON.stringify(s._services));
+        SERVICES.length = 0; s._services.forEach(sv => SERVICES.push(sv));
+      }
+      if (s._reviews && s._reviews.length && !localStorage.getItem('moonReviews')) {
+        localStorage.setItem('moonReviews', JSON.stringify(s._reviews));
+      }
+      if (CFG.accent) {
+        document.documentElement.style.setProperty('--gold', CFG.accent);
+        document.documentElement.style.setProperty('--gold2', CFG.accent);
+      }
+      rebuildTimes();
+    }
+    // ── END CLOUD SYNC ─────────────────────────────────────
+
+    renderAll();
+    renderDaysGrid(); renderBlockSelects(); renderBlocks();
+    renderSettings();
+    toast('Data loaded', 'ok');
+  } catch(e) { toast('Network error', 'err'); }
+}
+
+async function saveData() {
+  // Always do a fresh GET before PUT to avoid overwriting concurrent booking-page saves
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`,
+      { headers: { 'X-Master-Key': CFG.binKey } });
+    if (!r.ok) { toast('Save failed', 'err'); return; }
+    const { record } = await r.json();
+    // Merge: keep fresh bookings+clients from server, overlay our local changes
+    const merged = {
+      ...record,
+      bookings: DATA.bookings,
+      clients:  DATA.clients,
+    };
+    await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CFG.binKey },
+      body: JSON.stringify(merged)
+    });
+  } catch(e) { toast('Save failed', 'err'); }
+}
+
+function renderAll() {
+  renderStats();
+  renderSchedule();
+  renderBookings();
+  renderClients();
+}
+
+// ── STATS ─────────────────────────────────────────────────
+function renderStats() {
+  const today = dStr(new Date());
+  const todayBks = DATA.bookings.filter(b => b.date === today && b.status === 'confirmed');
+  const todayRev = todayBks.reduce((s,b) => s + (parseInt(b.price?.replace(/\D/g,''))||0), 0);
+  const totalRev = DATA.bookings.filter(b=>b.status==='confirmed').reduce((s,b)=>s+(parseInt(b.price?.replace(/\D/g,''))||0),0);
+  const upcoming = DATA.bookings.filter(b=>b.date>=today&&b.status==='confirmed').length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${todayBks.length}</div><div class="stat-label">Today's Appts</div></div>
+    <div class="stat-card"><div class="stat-val gold">$${todayRev}</div><div class="stat-label">Today's Revenue</div></div>
+    <div class="stat-card"><div class="stat-val">${upcoming}</div><div class="stat-label">Upcoming</div></div>
+    <div class="stat-card"><div class="stat-val gold">$${totalRev}</div><div class="stat-label">Total Revenue</div></div>
+  `;
+}
+
+
+// ── QUICK TEXT TEMPLATES ──────────────────────────────────
+function openQuickText(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  const shop = CFG.shopName || MOON_CONFIG.SHOP_NAME || 'Your barber';
+  const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+  const templates = [
+    { label: '✅ Confirmed',              msg: `Hey ${b.name}! Your ${b.service} is confirmed for ${dl} at ${b.time}. See you then! — ${shop}` },
+    { label: '❌ Denied / Can\'t Make It', msg: `Hey ${b.name}, sorry — we can't take your ${b.service} on ${dl} at ${b.time}. Please rebook at a different time. — ${shop}` },
+    { label: '⏰ Reminder',               msg: `Hey ${b.name}! Reminder — ${b.service} tomorrow at ${b.time}. See you then! — ${shop}` },
+    { label: '🕐 Running Late',           msg: `Hey ${b.name}, we're running a little behind. Your ${b.time} may start 10-15 min late. Thanks! — ${shop}` },
+    { label: '🚫 No Show Follow-up',      msg: `Hey ${b.name}, we missed you today for your ${b.time} ${b.service}. Feel free to rebook when you're ready! — ${shop}` },
+    { label: '🔁 Reschedule',             msg: `Hey ${b.name}, something came up for your ${dl} at ${b.time}. Can we reschedule? Reply here or rebook online. Sorry! — ${shop}` },
+  ];
+
+  const rows = templates.map((t, i) => `
+    <div class="qt-row" onclick="sendQTByIdx(${i})">
+      <div class="qt-label">${t.label}</div>
+      <div class="qt-preview">${t.msg.substring(0,80)}…</div>
+    </div>`).join('');
+
+  document.getElementById('qtBody').innerHTML = `
+    <div style="font-size:11px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px">
+      Tap → opens SMS app pre-filled for ${b.name} (${b.phone})
+    </div>
+    ${rows}`;
+  document.getElementById('qtModal').classList.add('show');
+  // store for sendQTByIdx
+  window._qtPhone = b.phone;
+  window._qtTemplates = templates;
+}
+
+function openSMS(phone, msg) {
+  const clean = phone.replace(/\D/g,'');
+  const sep = /iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?';
+  const a = document.createElement('a');
+  a.href = `sms:${clean}${sep}body=${encodeURIComponent(msg)}`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 500);
+}
+
+function sendQTByIdx(idx) {
+  const msg = window._qtTemplates[idx].msg;
+  closeQT();
+  setTimeout(() => openSMS(window._qtPhone, msg), 150);
+}
+
+function closeQT() {
+  document.getElementById('qtModal').classList.remove('show');
+}
+
+// ── NATIVE SMS REMINDERS ──────────────────────────────────
+function buildReminderMsg(name, service, date, time) {
+  const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const shop = cfg.shopName || MOON_CONFIG.SHOP_NAME || 'Your appointment';
+  const dl = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  return `Hey ${name}! Just a reminder — you have a ${service} tomorrow at ${time}. See you then! — ${shop}`;
+}
+
+function smsLink(phone, body) {
+  const clean = phone.replace(/\D/g,'');
+  const sep = /iPhone|iPad|Mac/.test(navigator.userAgent) ? '&' : '?';
+  return `sms:${clean}${sep}body=${encodeURIComponent(body)}`;
+}
+
+function sendNativeReminder(id, phone, name, service, date, time) {
+  const msg = buildReminderMsg(name, service, date, time);
+  window.location.href = smsLink(phone, msg);
+}
+
+function remindAllTomorrow() {
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const ds = dStr(tomorrow);
+  const bks = DATA.bookings.filter(b => b.date===ds && b.status==='confirmed');
+  if (!bks.length) { toast('No bookings tomorrow', 'err'); return; }
+  // Show a modal with one-tap SMS buttons per client (avoids group chat issues)
+  const rows = bks.map(bk => {
+    const msg = encodeURIComponent(buildReminderMsg(bk.name, bk.service, bk.date, bk.time));
+    const clean = bk.phone.replace(/\D/g,'');
+    const sep = /iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?';
+    return `<a href="sms:${clean}${sep}body=${msg}" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--rule);text-decoration:none;gap:12px;">
+      <div>
+        <div style="font-family:var(--display);font-size:1rem;color:var(--ink);line-height:1">${bk.name}</div>
+        <div style="font-size:0.55rem;color:var(--dim);margin-top:2px">${bk.service} · ${bk.time}</div>
+      </div>
+      <div style="background:var(--green);color:#fff;border-radius:20px;padding:7px 14px;font-size:0.5rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;flex-shrink:0">📱 Text</div>
+    </a>`;
+  }).join('');
+  document.getElementById('modalTitle').textContent = `Remind Tomorrow (${bks.length})`;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="font-size:0.55rem;color:var(--dim);margin-bottom:4px;letter-spacing:0.06em">Tap each client to open a pre-filled text message</div>
+    ${rows}`;
+  document.getElementById('modalFooter').innerHTML = `<button class="act-btn cancel-silent" onclick="closeModal()">Done</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+// ── SCHEDULE ──────────────────────────────────────────────
+function shiftDay(dir) {
+  if (dir === 0) { schedDay = new Date(); schedDay.setHours(0,0,0,0); }
+  else schedDay.setDate(schedDay.getDate() + dir);
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const ds = dStr(schedDay);
+  const isToday = ds === dStr(new Date());
+  const dl = schedDay.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('schedTitle').textContent = isToday ? "Today's Schedule" : dl;
+  document.getElementById('schedSub').textContent = isToday ? dl : '';
+
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  const dayBks = DATA.bookings.filter(b => b.date === ds && b.status !== 'cancelled' && b.status !== 'completed');
+  const dayBlocks = BLOCKS.filter(b => b.date === ds);
+  console.log('[Schedule] date:', ds, '| BLOCKS total:', BLOCKS.length, '| dayBlocks:', dayBlocks.length, dayBlocks);
+  const isWorkDay = WORK_DAYS.includes(schedDay.getDay());
+
+  let html = '';
+
+  if (!isWorkDay) {
+    html = `<div class="empty-state"><div class="empty-icon">🚫</div><div class="empty-label">Day off</div></div>`;
+  } else {
+    TIMES.forEach(t => {
+      const bk = dayBks.find(b => b.time === t);
+      const blocked = dayBlocks.find(b => b.fullDay || isTimeBlocked(t, b.from, b.to));
+
+      // check if this slot is in the past (today only)
+      const slotMins = (h => {
+        const [time, ap] = t.split(' ');
+        let [hr, mn] = time.split(':').map(Number);
+        if (ap === 'PM' && hr !== 12) hr += 12;
+        if (ap === 'AM' && hr === 12) hr = 0;
+        return hr * 60 + mn;
+      })();
+      const isPast = isToday && slotMins < nowMins;
+
+      // skip past empty slots — only show if booked or blocked
+      if (isPast && !bk && !blocked) return;
+
+      if (blocked) {
+        html += `<div class="time-slot blocked${isPast?' past':''}">
+          <div class="ts-time">${t}</div>
+          <div class="ts-content"><div class="ts-client-name">Blocked</div><div class="ts-svc-line">${blocked.reason||'Unavailable'}</div></div>
+        </div>`;
+      } else if (bk) {
+        html += `<div class="time-slot booked${isPast?' past':''}">
+          <div class="ts-time">${t}</div>
+          <div class="ts-content">
+            <div class="ts-client-name">${bk.name}</div>
+            <div class="ts-svc-line">${bk.service} · ${bk.price}</div>
+            <div class="ts-actions">
+              <button class="act-btn confirm ${bk.smsConfirmed?'sent':''}" onclick="confirmClient('${bk.id}')">${bk.smsConfirmed?'✓ Sent':'✓ Confirm'}</button>
+              <button class="act-btn reschedule" onclick="rescheduleClient('${bk.id}')">🔁</button>
+              <button class="act-btn done" onclick="doneBooking('${bk.id}')">✓ Done</button>
+              <button class="act-btn cancel-text" onclick="cancelClient('${bk.id}')">✕ Text</button>
+              <button class="act-btn cancel-silent" onclick="cancelBooking('${bk.id}')">✕</button>
+            </div>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="time-slot">
+          <div class="ts-time">${t}</div>
+          <div class="ts-content"><div class="ts-open">Open</div></div>
+        </div>`;
+      }
+    });
+    if (!html) html = `<div class="empty-state"><div class="empty-icon">☀️</div><div class="empty-label">All clear</div></div>`;
+  }
+
+  document.getElementById('slotList').innerHTML = html;
+  // show remind-all button only when viewing today (reminders go to tomorrow's clients)
+  const remindBtn = document.getElementById('btnRemindAll');
+  if (remindBtn) {
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const tmrBks = DATA.bookings.filter(b => b.date===dStr(tomorrow) && b.status==='confirmed');
+    const banner = document.getElementById('remindBanner');
+    if(banner) {
+      const show = isToday && tmrBks.length > 0;
+      banner.style.display = show ? 'flex' : 'none';
+      if(show) {
+        document.getElementById('remindText').textContent = `${tmrBks.length} client${tmrBks.length>1?'s':''} booked tomorrow`;
+        remindBtn.textContent = `📱 Remind All`;
+      }
+    }
+  }
+}
+
+function isTimeBlocked(time, from, to) {
+  // fullDay block has from=null — blocks everything
+  if (from === null || from === undefined) return true;
+  const idx = TIMES.indexOf(time);
+  const fi  = TIMES.indexOf(from);
+  const ti  = TIMES.indexOf(to);
+  // if from/to not found in TIMES, don't block (prevents -1 false positives)
+  if (fi === -1 || ti === -1) return false;
+  return idx >= fi && idx < ti;
+}
+
+// ── BOOKINGS ──────────────────────────────────────────────
+
+// ── DELETE BOOKING / CLIENT ────────────────────────────────
+function deleteBookingById(id) {
+  if (!confirm('Delete this booking?')) return;
+  DATA.bookings = DATA.bookings.filter(b => b.id !== id);
+  saveData();
+  renderBookings();
+  toast('Booking deleted', 'ok');
+}
+
+function deleteClientByPhone(phone) {
+  if (!confirm('Remove this client and all their bookings?')) return;
+  DATA.clients  = DATA.clients.filter(c => c.phone !== phone);
+  DATA.bookings = DATA.bookings.filter(b => b.phone !== phone);
+  saveData();
+  renderClients();
+  renderBookings();
+  toast('Client removed', 'ok');
+}
+
+// ── SWIPE TO DELETE ────────────────────────────────────────
+function initSwipe(wrap, onDelete) {
+  const inner = wrap.querySelector('.swipe-inner');
+  if (!inner) return;
+  let startX = 0, curX = 0, dragging = false, opened = false;
+  const THRESH = 60;
+
+  inner.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    curX = 0;
+    dragging = true;
+  }, { passive: true });
+
+  inner.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    curX = e.touches[0].clientX - startX;
+    if (curX > 0) { inner.style.transform = 'translateX(0)'; return; }
+    const dx = Math.max(curX, -80);
+    inner.style.transform = `translateX(${dx}px)`;
+  }, { passive: true });
+
+  inner.addEventListener('touchend', () => {
+    dragging = false;
+    if (curX < -THRESH) {
+      inner.style.transform = 'translateX(-72px)';
+      wrap.classList.add('swiped');
+      opened = true;
+    } else {
+      inner.style.transform = 'translateX(0)';
+      wrap.classList.remove('swiped');
+      opened = false;
+    }
+  });
+
+  // tap outside to close
+  wrap.addEventListener('touchstart', e => {
+    if (opened && !e.target.closest('.swipe-del')) {
+      inner.style.transform = 'translateX(0)';
+      wrap.classList.remove('swiped');
+      opened = false;
+    }
+  }, { passive: true });
+
+  // delete button
+  const delBtn = wrap.querySelector('.swipe-del');
+  if (delBtn) delBtn.addEventListener('click', onDelete);
+}
+
+function initAllSwipes() {
+  document.querySelectorAll('.swipe-wrap[data-id]').forEach(wrap => {
+    const id    = wrap.dataset.id;
+    const type  = wrap.dataset.type;
+    if (type === 'booking') initSwipe(wrap, () => deleteBookingById(id));
+    if (type === 'client')  initSwipe(wrap, () => deleteClientByPhone(id));
+  });
+}
+
+function renderBookings() {
+  const q = (document.getElementById('bookingSearch')?.value || '').toLowerCase();
+  const statusOrder = { confirmed: 0, completed: 1, cancelled: 2 };
+  const today = dStr(new Date());
+  let bks = [...DATA.bookings].sort((a, b) => {
+    const sa = statusOrder[a.status] ?? 0;
+    const sb = statusOrder[b.status] ?? 0;
+    if (sa !== sb) return sa - sb;
+    // within same status: upcoming before past, then newest date first
+    const aFuture = a.date >= today ? 0 : 1;
+    const bFuture = b.date >= today ? 0 : 1;
+    if (aFuture !== bFuture) return aFuture - bFuture;
+    return (b.date + b.time).localeCompare(a.date + a.time);
+  });
+  if (q) bks = bks.filter(b =>
+    b.name?.toLowerCase().includes(q) ||
+    b.service?.toLowerCase().includes(q) ||
+    b.date?.includes(q) ||
+    b.phone?.includes(q)
+  );
+
+  document.getElementById('bookingCount').textContent = `${bks.length} booking${bks.length!==1?'s':''}`;
+
+  const tbody = document.getElementById('bookingBody');
+  if (!bks.length) {
+    tbody.innerHTML = `<div class='empty-state'><div class='empty-icon'>📋</div><div class='empty-label'>No bookings found</div></div>`;
+    return;
+  }
+
+  tbody.innerHTML = bks.map(b => {
+    const dl = b.date ? new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
+    const dotCls = b.status==='confirmed' ? 'confirmed' : b.status==='cancelled' ? 'cancelled' : b.status==='completed' ? 'completed' : 'other';
+    const timeNote = b.cancelledAt ? ' · <span style="color:var(--red);font-size:0.4rem">Cancelled '+new Date(b.cancelledAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>'
+                   : b.completedAt ? ' · <span style="color:var(--blue);font-size:0.4rem">Done '+new Date(b.completedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>' : '';
+    return `<div class="swipe-wrap" data-id="${b.id}" data-type="booking">
+      <div class="swipe-inner">
+        <div class="bk-row" onclick="viewBooking('${b.id}')">
+          <div class="bk-dot ${dotCls}"></div>
+          <div class="bk-info">
+            <div class="bk-name">${b.name||'—'}</div>
+            <div class="bk-sub">${b.service||'—'} · ${b.time||''}${timeNote}</div>
+          </div>
+          <div class="bk-right">
+            <div class="bk-price">${b.price||'—'}</div>
+            <div class="bk-date">${dl}</div>
+            <div class="bk-status-lbl ${dotCls}">${b.status||'confirmed'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="swipe-del"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>DEL</div>
+    </div>`;
+  }).join('');
+  initAllSwipes();
+}
+
+// ── CLIENTS ───────────────────────────────────────────────
+function renderClients() {
+  const q = (document.getElementById('clientSearch')?.value || '').toLowerCase();
+  let clients = [...DATA.clients].sort((a,b) => (b.visits||0)-(a.visits||0));
+  if (q) clients = clients.filter(c => c.name?.toLowerCase().includes(q) || c.phone?.includes(q));
+
+  document.getElementById('clientCount').textContent = `${clients.length} client${clients.length!==1?'s':''}`;
+
+  const grid = document.getElementById('clientGrid');
+  if (!clients.length) {
+    grid.innerHTML = `<div class='empty-state'><div class='empty-icon'>👥</div><div class='empty-label'>No clients yet</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = clients.map(c => {
+    const lastDate = c.lastVisit ? new Date(c.lastVisit+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+    return `<div class="swipe-wrap" data-id="${c.phone}" data-type="client">
+      <div class="swipe-inner">
+        <div class="cl-row" onclick="viewClient('${c.phone}')">
+          <div class="cl-avatar">${(c.name||'??')[0].toUpperCase()}</div>
+          <div class="cl-info"><div class="cl-name">${c.name||'Unknown'}</div><div class="cl-phone">${c.phone||'—'} · Last: ${lastDate}</div></div>
+          <div class="cl-visits-wrap"><div class="cl-count">${c.visits||0}</div><div class="cl-count-lbl">visits</div></div>
+        </div>
+      </div>
+      <div class="swipe-del"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>DEL</div>
+    </div>`;
+  }).join('');
+  initAllSwipes();
+}
+
+function viewClient(phone) {
+  const c = DATA.clients.find(x => x.phone === phone);
+  if (!c) return;
+  const clientBks = DATA.bookings.filter(b => b.phone === phone && b.status === 'confirmed')
+    .sort((a,b) => b.date.localeCompare(a.date));
+
+  document.getElementById('modalTitle').textContent = c.name || 'Client';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-row"><span class="k">Phone</span><span class="v">${c.phone}</span></div>
+    <div class="modal-row"><span class="k">Total Visits</span><span class="v">${c.visits||0}</span></div>
+    <div class="modal-row"><span class="k">Points</span><span class="v">${c.points||0} pts</span></div>
+    <div class="modal-row"><span class="k">Streak</span><span class="v">${c.streak||0}</span></div>
+    <div class="modal-row"><span class="k">Member Since</span><span class="v">${c.joinDate||'—'}</span></div>
+    <div style="margin-top:14px;font-size:12px;letter-spacing:0.22em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Recent Bookings</div>
+    ${clientBks.slice(0,5).map(b=>{
+      const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return `<div class="modal-row"><span class="k">${dl} · ${b.time}</span><span class="v">${b.service} — ${b.price}</span></div>`;
+    }).join('') || '<div style="color:var(--dim);font-size:13px;padding:8px 0">No bookings</div>'}
+  `;
+  document.getElementById('modalFooter').innerHTML = `<button class="act-btn" onclick="closeModal()">Close</button>`;
+  openModal();
+}
+
+// ── BOOKING ACTIONS ───────────────────────────────────────
+function viewBooking(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  const dl = b.date ? new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}) : '—';
+  const badgeCls = b.status==='confirmed'?'badge-green':b.status==='cancelled'?'badge-red':b.status==='completed'?'badge-blue':'badge-dim';
+
+  document.getElementById('modalTitle').textContent = 'Booking — ' + (b.name||'Unknown');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-row"><span class="k">Service</span><span class="v">${b.service}</span></div>
+    <div class="modal-row"><span class="k">Price</span><span class="v" style="color:var(--gold)">${b.price}</span></div>
+    <div class="modal-row"><span class="k">Date</span><span class="v">${dl}</span></div>
+    <div class="modal-row"><span class="k">Time</span><span class="v">${b.time}</span></div>
+    <div class="modal-row"><span class="k">Client</span><span class="v">${b.name}</span></div>
+    <div class="modal-row"><span class="k">Phone</span><span class="v">${b.phone}</span></div>
+    <div class="modal-row"><span class="k">Status</span><span class="v"><span class="badge ${badgeCls}">${b.status}</span></span></div>
+    <div class="modal-row"><span class="k">Booked At</span><span class="v">${b.bookedAt ? new Date(b.bookedAt).toLocaleString() : '—'}</span></div>
+  `;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="act-btn" onclick="closeModal()">Close</button>
+    ${b.status==='confirmed'?`<button class="act-btn cancel-text" onclick="closeModal();cancelBooking('${b.id}')">Cancel Booking</button>`:''}
+  `;
+  openModal();
+}
+
+async function cancelBooking(id) {
+  const bk = DATA.bookings.find(b => b.id === id);
+  if (!bk) return;
+  bk.status = 'cancelled';
+  bk.cancelledAt = new Date().toISOString();
+  await saveData();
+  renderAll();
+  toast('Booking cancelled', 'ok');
+}
+
+function confirmClient(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  const shop = CFG.shopName || MOON_CONFIG.SHOP_NAME || 'Your barber';
+  const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const msg = `Hey ${b.name}! Your ${b.service} is confirmed for ${dl} at ${b.time}. See you then! — ${shop}`;
+  b.smsConfirmed = true;
+  renderSchedule();
+  openSMS(b.phone, msg);
+  toast(`Confirmation sent to ${b.name}`, 'ok');
+}
+
+function cancelClient(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  const shop = CFG.shopName || MOON_CONFIG.SHOP_NAME || 'Your barber';
+  const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const msg = `Hey ${b.name}, sorry — we can't take your ${b.service} on ${dl} at ${b.time}. Feel free to rebook at a different time. — ${shop}`;
+  // Cancel booking FIRST so dismissing SMS doesn't leave ghost bookings
+  cancelBooking(id);
+  setTimeout(() => openSMS(b.phone, msg), 300);
+}
+
+
+
+function rescheduleClient(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  const shop = CFG.shopName || MOON_CONFIG.SHOP_NAME || 'Your barber';
+  const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const bookingUrl = window.location.origin + '/index.html';
+  const msg = `Hey ${b.name}, sorry we can't do ${dl} at ${b.time} for your ${b.service}. Can we reschedule? Book a new time here: ${bookingUrl} — ${shop}`;
+  openSMS(b.phone, msg);
+}
+
+async function doneBooking(id) {
+  const b = DATA.bookings.find(x => x.id === id);
+  if (!b) return;
+  b.status = 'completed';
+  b.completedAt = new Date().toISOString();
+  await saveData();
+  renderAll();
+  toast(`${b.name} marked done ✓`, 'ok');
+}
+
+// ── AVAILABILITY ──────────────────────────────────────────
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_FULL  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Per-day hours: { 1:{open:9,close:18}, 6:{open:9,close:14}, ... }
+// Defaults to global CFG.openHour / closeHour if not set
+let DAY_HOURS = {};
+
+function fmtH(h) {
+  const ap = h < 12 ? 'AM' : 'PM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:00 ${ap}`;
+}
+
+function hourOptions(cur) {
+  let html = '';
+  for (let h = 5; h <= 23; h++) {
+    html += `<option value="${h}" ${h===cur?'selected':''}>${fmtH(h)}</option>`;
+  }
+  return html;
+}
+
+function renderDaysGrid() {
+  const defOpen  = CFG.openHour  || 9;
+  const defClose = CFG.closeHour || 18;
+
+  document.getElementById('daysGrid').innerHTML =
+    `<div class="day-card-list">${DAY_NAMES.map((d, i) => {
+      const on  = WORK_DAYS.includes(i);
+      const dh  = DAY_HOURS[i] || { open: defOpen, close: defClose };
+      const lbl = on ? `${fmtH(dh.open)} – ${fmtH(dh.close)}` : 'Day off';
+      return `
+      <div class="day-card ${on?'on':'off'}" id="daycard-${i}">
+        <div class="day-card-top">
+          <div class="day-card-toggle ${on?'on':''}" onclick="toggleDay(${i})" id="daytog-${i}"></div>
+          <div class="day-card-name">${d}</div>
+          <div class="day-card-status ${on?'open':''}" id="daystatus-${i}">${lbl}</div>
+        </div>
+        <div class="day-card-hours" id="dayhours-${i}" style="display:${on?'flex':'none'}">
+          <select class="bf-select dh-sel" id="dayopen-${i}" onchange="updateDayHours(${i})">${hourOptions(dh.open)}</select>
+          <span style="color:var(--dim);font-size:12px;flex-shrink:0">to</span>
+          <select class="bf-select dh-sel" id="dayclose-${i}" onchange="updateDayHours(${i})">${hourOptions(dh.close)}</select>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+}
+
+function toggleDay(i) {
+  if (WORK_DAYS.includes(i)) WORK_DAYS = WORK_DAYS.filter(d => d !== i);
+  else WORK_DAYS.push(i);
+  const on  = WORK_DAYS.includes(i);
+  const dh  = DAY_HOURS[i] || { open: CFG.openHour||9, close: CFG.closeHour||18 };
+  document.getElementById(`daycard-${i}`).className    = `day-card ${on?'on':'off'}`;
+  document.getElementById(`daytog-${i}`).className     = `day-card-toggle ${on?'on':''}`;
+  document.getElementById(`daystatus-${i}`).textContent = on ? `${fmtH(dh.open)} – ${fmtH(dh.close)}` : 'Day off';
+  document.getElementById(`daystatus-${i}`).className  = `day-card-status ${on?'open':''}`;
+  document.getElementById(`dayhours-${i}`).style.display = on ? 'flex' : 'none';
+}
+
+function updateDayHours(i) {
+  const o = parseInt(document.getElementById(`dayopen-${i}`).value);
+  const c = parseInt(document.getElementById(`dayclose-${i}`).value);
+  if (o >= c) { toast('Close must be after open', 'err'); return; }
+  DAY_HOURS[i] = { open: o, close: c };
+  document.getElementById(`daystatus-${i}`).textContent = `${fmtH(o)} – ${fmtH(c)}`;
+}
+
+function saveWorkDays() {
+  // read any dropdowns that may have changed
+  DAY_NAMES.forEach((_, i) => {
+    const openEl  = document.getElementById(`dayopen-${i}`);
+    const closeEl = document.getElementById(`dayclose-${i}`);
+    if (openEl && closeEl) {
+      DAY_HOURS[i] = { open: parseInt(openEl.value), close: parseInt(closeEl.value) };
+    }
+  });
+  localStorage.setItem('moonWorkDays',  JSON.stringify(WORK_DAYS));
+  localStorage.setItem('moonDayHours',  JSON.stringify(DAY_HOURS));
+  CFG.workDays = WORK_DAYS;
+  CFG.dayHours = DAY_HOURS;
+  persist();
+  toast('Schedule saved', 'ok');
+}
+
+function renderBlockSelects() {
+  const fromSel = document.getElementById('blockFrom');
+  const toSel = document.getElementById('blockTo');
+  fromSel.innerHTML = TIMES.map(t => `<option value="${t}">${t}</option>`).join('');
+  toSel.innerHTML = TIMES.map(t => `<option value="${t}">${t}</option>`).join('');
+  toSel.selectedIndex = 1;
+
+  // default date = today
+  document.getElementById('blockDate').value = dStr(new Date());
+}
+
+
+// ── BLOCK PRESETS ─────────────────────────────────────────
+const BLOCK_PRESETS = {
+  morning:   { from: '9:00 AM',  to: '12:00 PM', reason: 'Morning off' },
+  lunch:     { from: '12:00 PM', to: '1:30 PM',  reason: 'Lunch break' },
+  afternoon: { from: '1:00 PM',  to: '6:00 PM',  reason: 'Afternoon off' },
+  fullday:   { from: null,       to: null,        reason: 'Day off', fullDay: true },
+};
+
+function applyPreset(type) {
+  const date = document.getElementById('blockDate').value;
+  if (!date) { toast('Pick a date first', 'err'); return; }
+  const p = BLOCK_PRESETS[type];
+  if (!p) return;
+
+  if (p.fullDay) {
+    BLOCKS.push({ id: `BL-${Date.now()}`, date, from: null, to: null, reason: p.reason, fullDay: true });
+  } else {
+    // find closest TIMES
+    const fi = TIMES.indexOf(p.from) >= 0 ? p.from : TIMES[0];
+    const ti = TIMES.indexOf(p.to)   >= 0 ? p.to   : TIMES[TIMES.length-1];
+    BLOCKS.push({ id: `BL-${Date.now()}`, date, from: fi, to: ti, reason: p.reason });
+  }
+  localStorage.setItem('moonBlocks', JSON.stringify(BLOCKS));
+  persist();
+  renderBlocks();
+  renderSchedule();
+  toast(`${p.reason} blocked ✓`, 'ok');
+}
+
+function addBlock() {
+  const date = document.getElementById('blockDate').value;
+  const from = document.getElementById('blockFrom').value;
+  const to = document.getElementById('blockTo').value;
+  const reason = document.getElementById('blockReason').value.trim();
+
+  if (!date) { toast('Pick a date', 'err'); return; }
+  if (TIMES.indexOf(from) >= TIMES.indexOf(to)) { toast('"To" must be after "From"', 'err'); return; }
+
+  BLOCKS.push({ id: `BL-${Date.now()}`, date, from, to, reason });
+  localStorage.setItem('moonBlocks', JSON.stringify(BLOCKS));
+  backupSettingsToCloud({...CFG, _workDays:WORK_DAYS, _dayHours:DAY_HOURS, _blocks:BLOCKS, _services:JSON.parse(localStorage.getItem('moonServices')||'[]')});
+  renderBlocks();
+  renderSchedule();
+  toast('Time blocked ✓', 'ok');
+}
+
+function removeBlock(id) {
+  BLOCKS = BLOCKS.filter(b => b.id !== id);
+  localStorage.setItem('moonBlocks', JSON.stringify(BLOCKS));
+  backupSettingsToCloud({...CFG, _workDays:WORK_DAYS, _dayHours:DAY_HOURS, _blocks:BLOCKS, _services:JSON.parse(localStorage.getItem('moonServices')||'[]')});
+  renderBlocks();
+  renderSchedule();
+  toast('Block removed', 'ok');
+}
+
+function renderBlocks() {
+  const upcoming = BLOCKS.filter(b => b.date >= dStr(new Date())).sort((a,b) => a.date.localeCompare(b.date));
+  const list = document.getElementById('blockList');
+  if (!upcoming.length) {
+    list.innerHTML = `<div class='empty-state' style='padding:24px'><div class='empty-icon' style='font-size:1.5rem'>🗓</div><div class='empty-label'>No blocked times yet</div></div>`;
+    return;
+  }
+  list.innerHTML = upcoming.map(b => {
+    const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const timeStr = b.fullDay ? 'All day' : `${b.from} – ${b.to}`;
+    return `<div class="block-item">
+      <div><div class="block-date-label">${dl} · ${timeStr}</div>${b.reason?'<div class="block-time-label">'+b.reason+'</div>':''}</div>
+      <button class="block-del-btn" onclick="removeBlock('${b.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+// ── SETTINGS TABS ─────────────────────────────────────────
+function showStab(name, el) {
+  document.querySelectorAll('.stab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  document.getElementById('stab-'+name).classList.add('active');
+  el.classList.add('active');
+  // re-render dynamic content each time tab opens
+  if(name==='services')   renderSvcEditor();
+  if(name==='appearance'){ renderSwatches(); renderThemeGrid(); renderFontGrid(); }
+  if(name==='reviews')    loadDashReviews();
+}
+
+// ── RENDER SETTINGS ───────────────────────────────────────
+function renderSettings() {
+  const g = id => document.getElementById(id);
+  const C = CFG;
+  g('cfgShopName').value  = C.shopName  || MOON_CONFIG.SHOP_NAME      || '';
+  g('cfgPhone').value     = C.phone     || MOON_CONFIG.SHOP_PHONE      || '';
+  g('cfgInstagram').value = C.instagram || MOON_CONFIG.SHOP_INSTAGRAM  || '';
+  g('cfgWelcome').value   = C.welcome   || '';
+  g('cfgCashapp').value   = C.cashapp   || MOON_CONFIG.CASHAPP         || '';
+  g('cfgVenmo').value     = C.venmo     || MOON_CONFIG.VENMO           || '';
+  g('cfgPaypal').value    = C.paypal    || MOON_CONFIG.PAYPAL          || '';
+  g('cfgZelle').value     = C.zelle     || '';
+  g('cfgBinId').value     = C.binId     || MOON_CONFIG.JSONBIN_BIN_ID  || '';
+  g('cfgBinKey').value    = C.binKey    || MOON_CONFIG.JSONBIN_API_KEY || '';
+  g('cfgSms').value       = C.sms       || MOON_CONFIG.SMS_ENDPOINT    || '';
+
+  // cancellation slider
+  const ch = C.cancelHours || 2;
+  g('cancelHours').value = ch;
+  g('cancelVal').textContent = ch + 'h';
+
+  // max day
+  if(C.maxDayEnabled) g('togMaxDay').classList.add('on');
+  g('cfgMaxDay').value = C.maxDay || 12;
+
+  // reminder toggle
+  if(C.reminder !== false) g('togReminder').classList.add('on');
+
+  // accent color
+  applyAccent(C.accent || '#c4a97d', false);
+  renderSwatches();
+
+  // theme grid rendered on tab open
+
+  // services editor
+  renderSvcEditor();
+  loadCopyFields();
+  // walk-in & quick text toggles
+  if(CFG.walkinOn)    document.getElementById('togWalkin')?.classList.add('on');
+  if(CFG.quickTextOn !== false) document.getElementById('togQuickText')?.classList.add('on');
+  // sms toggle — on by default, off only if explicitly disabled
+  if(C.smsEnabled === true) document.getElementById('togSms')?.classList.add('on');
+  else document.getElementById('togSms')?.classList.remove('on');
+  // other tabs
+  renderVacationTab();
+  renderGalleryTab();
+  loadDashReviews();
+}
+
+// ── SAVE SETTINGS ─────────────────────────────────────────
+function saveSettings() {
+  const v = id => document.getElementById(id).value.trim();
+  CFG.shopName  = v('cfgShopName');
+  CFG.phone     = v('cfgPhone');
+  CFG.instagram = v('cfgInstagram');
+  CFG.welcome   = v('cfgWelcome');
+  CFG.cashapp   = v('cfgCashapp');
+  CFG.venmo     = v('cfgVenmo');
+  CFG.paypal    = v('cfgPaypal');
+  CFG.zelle     = v('cfgZelle');
+  CFG.binId     = v('cfgBinId');
+  CFG.binKey    = v('cfgBinKey');
+  CFG.sms       = v('cfgSms');
+  CFG.smsEnabled = document.getElementById('togSms').classList.contains('on');
+  if(document.getElementById('cfgCustomSms')) CFG.customSms = document.getElementById('cfgCustomSms').value.trim();
+  persist();
+  if(CFG.shopName) document.querySelector('.sb-logo-main').textContent = CFG.shopName;
+  toast('Saved', 'ok');
+}
+
+function saveCopy() {
+  const v = id => document.getElementById(id)?.value.trim() || '';
+  CFG.copy = {
+    s1top:    v('cpyS1top'),
+    s1main:   v('cpyS1main'),
+    s2top:    v('cpyS2top'),
+    s2main:   v('cpyS2main'),
+    s3top:    v('cpyS3top'),
+    s3main:   v('cpyS3main'),
+    s4top:    v('cpyS4top'),
+    s4main:   v('cpyS4main'),
+    infoNote: v('cpyInfoNote'),
+  };
+  persist();
+  toast('Page copy saved', 'ok');
+}
+
+function loadCopyFields() {
+  const cp = CFG.copy || {};
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+  set('cpyS1top',   cp.s1top);
+  set('cpyS1main',  cp.s1main);
+  set('cpyS2top',   cp.s2top);
+  set('cpyS2main',  cp.s2main);
+  set('cpyS3top',   cp.s3top);
+  set('cpyS3main',  cp.s3main);
+  set('cpyS4top',   cp.s4top);
+  set('cpyS4main',  cp.s4main);
+  set('cpyInfoNote',cp.infoNote);
+}
+
+// ── HOURS ─────────────────────────────────────────────────
+function highlightSlotBtn() {
+  const slotLen = CFG.slotLen || 30;
+  document.querySelectorAll('#slotLengthBtns .btn').forEach(b => {
+    const match = b.textContent.trim().startsWith(String(slotLen));
+    b.classList.toggle('btn-primary', match);
+    b.classList.toggle('btn-ghost', !match);
+  });
+}
+
+// slot length helper — kept for rebuildTimes
+function setSlotLen(min, btn) {
+  CFG.slotLen = min;
+  document.querySelectorAll('#slotLengthBtns .btn').forEach(b => {
+    b.classList.toggle('btn-primary', b===btn);
+    b.classList.toggle('btn-ghost', b!==btn);
+  });
+  rebuildTimes();
+  persist();
+  toast('Slot length updated', 'ok');
+}
+
+function rebuildTimes() {
+  const open  = CFG.openHour  || MOON_CONFIG.OPEN_HOUR  || 9;
+  const close = CFG.closeHour || MOON_CONFIG.CLOSE_HOUR || 18;
+  const step  = CFG.slotLen   || 30;
+  const newTimes = [];
+  for(let mins = open*60; mins < close*60; mins += step){
+    const h = Math.floor(mins/60);
+    const m = mins%60;
+    const ampm = h<12?'AM':'PM';
+    const h12 = h===0?12:h>12?h-12:h;
+    newTimes.push(`${h12}:${m.toString().padStart(2,'0')} ${ampm}`);
+  }
+  TIMES.length = 0;
+  newTimes.forEach(t => TIMES.push(t));
+  renderBlockSelects();
+}
+
+// ── SERVICES EDITOR ───────────────────────────────────────
+let editServices = null;
+
+function getServices() {
+  const saved = localStorage.getItem('moonServices');
+  return saved ? JSON.parse(saved) : [...SERVICES];
+}
+
+function renderSvcEditor() {
+  editServices = getServices();
+  const list = document.getElementById('svcEditorList');
+  if(!list) return;
+  list.innerHTML = editServices.map((s,i) => `
+    <div class="svc-row" data-i="${i}">
+      
+      <span class="svc-name" contenteditable="true" onblur="editSvcField(${i},'name',this.textContent)">${s.name}</span>
+      <span class="svc-price" contenteditable="true" onblur="editSvcField(${i},'price',this.textContent)" style="cursor:text">$<span>${s.priceNum}</span></span>
+      <span class="svc-dur">${s.dur}</span>
+      <button class="svc-del" onclick="deleteSvc(${i})">✕</button>
+    </div>`).join('');
+}
+
+function editSvcField(i, field, val) {
+  if(field==='price'){
+    const num = parseInt(val.replace(/\D/g,''))||0;
+    editServices[i].priceNum = num;
+    editServices[i].price = '$'+num;
+  } else {
+    editServices[i][field] = val.trim().toUpperCase();
+  }
+  saveServices();
+}
+
+function deleteSvc(i) {
+  editServices.splice(i,1);
+  saveServices();
+  renderSvcEditor();
+  toast('Service removed', 'ok');
+}
+
+function addService() {
+  const name  = document.getElementById('newSvcName').value.trim().toUpperCase();
+  const price = parseInt(document.getElementById('newSvcPrice').value)||0;
+  const dur   = document.getElementById('newSvcDur').value;
+  if(!name){ toast('Enter a service name', 'err'); return; }
+  editServices = getServices();
+  editServices.push({ id: 'svc'+Date.now(), name, price:'$'+price, priceNum:price, dur });
+  saveServices();
+  renderSvcEditor();
+  document.getElementById('newSvcName').value='';
+  document.getElementById('newSvcPrice').value='';
+  toast('Service added', 'ok');
+}
+
+function saveServices() {
+  localStorage.setItem('moonServices', JSON.stringify(editServices));
+  persist();
+  // update live SERVICES array
+  SERVICES.length = 0;
+  editServices.forEach(s => SERVICES.push(s));
+}
+
+// ── APPEARANCE ────────────────────────────────────────────
+const SWATCHES = ['#c4a97d','#e05c5c','#5c9ee0','#5ce09a','#c45ce0','#e0b45c','#ffffff','#888888'];
+
+function renderSwatches() {
+  const cur = CFG.accent || '#c4a97d';
+  document.getElementById('swatchRow').innerHTML = SWATCHES.map(c=>`
+    <div class="swatch${c===cur?' active':''}" style="background:${c}" onclick="pickSwatch('${c}')" title="${c}"></div>
+  `).join('');
+  document.getElementById('cfgAccent').value = cur;
+  document.getElementById('colorPreview').style.background = cur;
+}
+
+function pickSwatch(c) {
+  applyAccent(c);
+  renderSwatches();
+}
+
+function applyAccent(c, save=true) {
+  if(!/^#[0-9a-fA-F]{3,6}$/.test(c)) return;
+  document.documentElement.style.setProperty('--gold', c);
+  document.documentElement.style.setProperty('--gold2', c);
+  document.getElementById('colorPreview').style.background = c;
+  if(save){ CFG.accent = c; }
+}
+
+// ── THEMES ────────────────────────────────────────────────
+const THEMES = [
+  // dark
+  { id:'smoke',      name:'Smoke',     desc:'Classic dark',        bg:'#090909', s1:'#111111', text:'#f0ebe2', accent:'#c4a97d', dot2:'#2a2a2a', dot3:'#1a1a1a', light:false },
+  { id:'noir',       name:'Noir',      desc:'All black',           bg:'#000000', s1:'#0d0d0d', text:'#ffffff', accent:'#d4d4d4', dot2:'#1a1a1a', dot3:'#0d0d0d', light:false },
+  { id:'cobalt',     name:'Cobalt',    desc:'Deep blue night',     bg:'#080c18', s1:'#0d1220', text:'#e0e8f8', accent:'#6090d4', dot2:'#1a2238', dot3:'#121828', light:false },
+  { id:'forest',     name:'Forest',    desc:'Earthy green',        bg:'#090e0a', s1:'#0f1a10', text:'#e8f0e8', accent:'#7ab87a', dot2:'#1a2e1c', dot3:'#142016', light:false },
+  { id:'blush',      name:'Blush',     desc:'Warm rose dark',      bg:'#180d0d', s1:'#221414', text:'#f5e6e6', accent:'#d4748a', dot2:'#3a2020', dot3:'#2a1818', light:false },
+  { id:'plum',       name:'Plum',      desc:'Rich purple',         bg:'#100a18', s1:'#180f22', text:'#ede0f8', accent:'#b07ed4', dot2:'#2a1a3a', dot3:'#20142e', light:false },
+  { id:'rose',       name:'Rose',      desc:'Dark romantic',       bg:'#12080e', s1:'#1c0e18', text:'#f5e0ee', accent:'#e07090', dot2:'#2e1428', dot3:'#22111e', light:false },
+  { id:'slate',      name:'Slate',     desc:'Cool grey',           bg:'#0c0e10', s1:'#141618', text:'#e8eaec', accent:'#90a4b8', dot2:'#222628', dot3:'#1a1e20', light:false },
+  // light
+  { id:'white',      name:'White',     desc:'Clean & minimal',     bg:'#ffffff', s1:'#f8f8f8', text:'#111111', accent:'#222222', dot2:'#e0e0e0', dot3:'#f0f0f0', light:true },
+  { id:'pearl',      name:'Pearl',     desc:'Soft warm white',     bg:'#faf8f5', s1:'#f2ede6', text:'#1a1814', accent:'#9a7c5a', dot2:'#ddd5c8', dot3:'#e8e0d4', light:true },
+  { id:'petal',      name:'Petal',     desc:'Pink & airy',         bg:'#fdf5f7', s1:'#f8ecf0', text:'#2a1420', accent:'#c4607a', dot2:'#e8cece', dot3:'#f0dde4', light:true },
+  { id:'lavender',   name:'Lavender',  desc:'Soft purple',         bg:'#f6f4fc', s1:'#edeaf8', text:'#1a1430', accent:'#7c60c4', dot2:'#d4cef0', dot3:'#e8e4f8', light:true },
+  { id:'sage',       name:'Sage',      desc:'Soft green',          bg:'#f4f8f4', s1:'#e8f0e8', text:'#142014', accent:'#5a9460', dot2:'#cce0cc', dot3:'#dceadc', light:true },
+  { id:'linen',      name:'Linen',     desc:'Neutral warm',        bg:'#f5f0e8', s1:'#ede8de', text:'#1a1a18', accent:'#8a6f50', dot2:'#d8d0c0', dot3:'#e5e0d4', light:true },
+  { id:'cloud',      name:'Cloud',     desc:'Pale blue calm',      bg:'#f4f7fc', s1:'#eaf0f8', text:'#101828', accent:'#4a80c4', dot2:'#ccdaee', dot3:'#dce8f4', light:true },
+  { id:'mauve',      name:'Mauve',     desc:'Dusty rose',          bg:'#f8f4f6', s1:'#f0e8ec', text:'#28141e', accent:'#b06080', dot2:'#e0ccd6', dot3:'#eadae0', light:true },
+];
+
+// ── FONTS ─────────────────────────────────────────────────
+const FONTS = [
+  { id:'barlow',    name:'Barlow',    family:"'Barlow Condensed',sans-serif",    desc:'Bold condensed',     url:'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700&display=swap' },
+  { id:'playfair',  name:'Playfair',  family:"'Playfair Display',serif",         desc:'Elegant serif',      url:'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap' },
+  { id:'cormorant', name:'Cormorant', family:"'Cormorant Garamond',serif",       desc:'Refined & delicate', url:'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&display=swap' },
+  { id:'josefin',   name:'Josefin',   family:"'Josefin Sans',sans-serif",        desc:'Clean geometric',    url:'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&display=swap' },
+  { id:'dm',        name:'DM Serif',  family:"'DM Serif Display',serif",         desc:'Modern editorial',   url:'https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap' },
+  { id:'nunito',    name:'Nunito',    family:"'Nunito',sans-serif",              desc:'Soft & friendly',    url:'https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap' },
+  { id:'raleway',   name:'Raleway',   family:"'Raleway',sans-serif",             desc:'Fashion-forward',    url:'https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap' },
+  { id:'italiana',  name:'Italiana',  family:"'Italiana',serif",                 desc:'High fashion',       url:'https://fonts.googleapis.com/css2?family=Italiana&display=swap' },
+];
+
+function renderThemeGrid() {
+  const cur  = CFG.bgTheme || 'smoke';
+  const dark  = THEMES.filter(t => !t.light);
+  const light = THEMES.filter(t =>  t.light);
+  const card  = t => `
+    <div class="theme-card ${t.id===cur?'active':''}" onclick="pickTheme('${t.id}')"
+      style="background:${t.bg};border-color:${t.id===cur?t.accent:'transparent'}">
+      <div class="theme-card-name" style="color:${t.text}">${t.name}</div>
+      <div class="theme-card-desc" style="color:${t.text};opacity:0.6">${t.desc}</div>
+      <div class="theme-card-dots">
+        <div class="theme-card-dot" style="background:${t.accent}"></div>
+        <div class="theme-card-dot" style="background:${t.dot2}"></div>
+        <div class="theme-card-dot" style="background:${t.dot3}"></div>
+      </div>
+    </div>`;
+  document.getElementById('themeGrid').innerHTML =
+    `<div class="theme-group-label">Dark</div>
+     <div class="theme-grid-row">${dark.map(card).join('')}</div>
+     <div class="theme-group-label" style="margin-top:14px">Light</div>
+     <div class="theme-grid-row">${light.map(card).join('')}</div>`;
+}
+
+function renderFontGrid() {
+  const cur = CFG.fontId || 'barlow';
+  // preload all font links into head
+  FONTS.forEach(f => {
+    if (!document.querySelector(`link[href="${f.url}"]`)) {
+      const l = document.createElement('link');
+      l.rel = 'stylesheet'; l.href = f.url;
+      document.head.appendChild(l);
+    }
+  });
+  document.getElementById('fontGrid').innerHTML = FONTS.map(f => `
+    <div class="font-card ${f.id===cur?'active':''}" onclick="pickFont('${f.id}')">
+      <div class="font-card-name" style="font-family:${f.family}">${f.name}</div>
+      <div class="font-card-desc">${f.desc}</div>
+    </div>`).join('');
+}
+
+function pickTheme(id) {
+  CFG.bgTheme = id;
+  const t = THEMES.find(x => x.id===id);
+  if (t && !CFG.accentOverride) { CFG.accent = t.accent; applyAccent(t.accent); }
+  renderThemeGrid();
+}
+
+function pickFont(id) {
+  CFG.fontId = id;
+  renderFontGrid();
+}
+
+function setBgTheme(theme) { pickTheme(theme); }
+
+function saveAppearance() {
+  // bgTheme and fontId are already set on CFG when user clicks a card
+  // Just make sure accent is captured too
+  const accentInput = document.getElementById('cfgAccent');
+  if (accentInput && accentInput.value.trim()) CFG.accent = accentInput.value.trim();
+  persist();
+  toast('Appearance saved — booking page will update ✓', 'ok');
+}
+
+// ── BOOKING RULES ─────────────────────────────────────────
+function saveRules() {
+  CFG.cancelHours   = parseInt(document.getElementById('cancelHours').value);
+  CFG.maxDayEnabled = document.getElementById('togMaxDay').classList.contains('on');
+  CFG.maxDay        = parseInt(document.getElementById('cfgMaxDay').value)||12;
+  CFG.reminder      = document.getElementById('togReminder').classList.contains('on');
+  CFG.walkinOn      = document.getElementById('togWalkin').classList.contains('on');
+  CFG.quickTextOn   = document.getElementById('togQuickText').classList.contains('on');
+  persist();
+  toast('Rules saved', 'ok');
+}
+
+
+// ── GALLERY & ABOUT ───────────────────────────────────────
+function saveGallery() {
+  const raw = document.getElementById('cfgPhotos').value.trim();
+  CFG.photos = raw ? raw.split('\n').map(l=>l.trim()).filter(Boolean) : [];
+  CFG.about  = document.getElementById('cfgAbout').value.trim();
+  CFG.customSms = document.getElementById('cfgCustomSms')?.value?.trim() || '';
+  persist();
+  toast('Gallery saved', 'ok');
+}
+
+// ── REVIEWS DASHBOARD ─────────────────────────────────────
+function loadDashReviews() {
+  const reviews = JSON.parse(localStorage.getItem('moonReviews') || '[]');
+  const list = document.getElementById('reviewsDashList');
+  if (!reviews.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--dim);padding:8px 0">No reviews yet — they appear here after clients leave them on the booking page.</div>';
+    return;
+  }
+  list.innerHTML = reviews.slice().reverse().map((r,i) => `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:12px 14px">
+      <div>
+        <div style="color:var(--gold);font-size:12px;letter-spacing:2px;margin-bottom:3px">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="font-size:13px;color:var(--ink);margin-bottom:4px">${r.text||'No comment'}</div>
+        <div style="font-size:11px;color:var(--dim)">${r.name} · ${r.date?new Date(r.date).toLocaleDateString():'—'}</div>
+      </div>
+      <button class="act-btn cancel-text" onclick="deleteReview(${reviews.length-1-i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+function deleteReview(i) {
+  const reviews = JSON.parse(localStorage.getItem('moonReviews') || '[]');
+  reviews.splice(i, 1);
+  localStorage.setItem('moonReviews', JSON.stringify(reviews));
+  // include reviews in next cloud snapshot
+  CFG._reviews = reviews;
+  persist();
+  loadDashReviews();
+  toast('Review removed', 'ok');
+}
+
+// ── VACATION ──────────────────────────────────────────────
+function saveVacation() {
+  CFG.vacaOn    = document.getElementById('togVaca').classList.contains('on');
+  CFG.vacaIcon  = document.getElementById('cfgVacaIcon').value.trim()  || '✈️';
+  CFG.vacaTitle = document.getElementById('cfgVacaTitle').value.trim() || "We'll be back.";
+  CFG.vacaMsg   = document.getElementById('cfgVacaMsg').value.trim()   || 'Bookings are paused right now. Check back soon.';
+  persist();
+  toast(CFG.vacaOn ? 'Vacation mode ON — booking page is paused' : 'Vacation mode OFF', CFG.vacaOn ? '' : 'ok');
+}
+
+function renderVacationTab() {
+  if(CFG.vacaOn) document.getElementById('togVaca').classList.add('on');
+  const g = id => document.getElementById(id);
+  if(CFG.vacaIcon)  g('cfgVacaIcon').value  = CFG.vacaIcon;
+  if(CFG.vacaTitle) g('cfgVacaTitle').value = CFG.vacaTitle;
+  if(CFG.vacaMsg)   g('cfgVacaMsg').value   = CFG.vacaMsg;
+}
+
+function renderGalleryTab() {
+  const g = id => document.getElementById(id);
+  if(CFG.photos?.length) g('cfgPhotos').value = CFG.photos.join('\n');
+  if(CFG.about)  g('cfgAbout').value  = CFG.about;
+  if(CFG.customSms && g('cfgCustomSms')) g('cfgCustomSms').value = CFG.customSms;
+}
+
+// ── PERSIST (save everything to localStorage) ─────────────
+// ── PERSIST ───────────────────────────────────────────────
+// Saves to localStorage instantly, and debounces a cloud backup to JSONBin
+// so if the barber ever clears their cache, settings restore automatically.
+let _persistTimer = null;
+function persist() {
+  localStorage.setItem('moonCfg', JSON.stringify(CFG));
+  // also save auxiliary keys into CFG snapshot so they restore together
+  const snapshot = {
+    ...CFG,
+    _workDays:  WORK_DAYS,
+    _dayHours:  DAY_HOURS,
+    _blocks:    BLOCKS,
+    _services:  JSON.parse(localStorage.getItem('moonServices') || '[]'),
+    _reviews:   JSON.parse(localStorage.getItem('moonReviews')  || '[]'),
+  };
+  clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(() => backupSettingsToCloud(snapshot), 2000);
+}
+
+async function backupSettingsToCloud(snapshot) {
+  if (!CFG.binId || !CFG.binKey) return;
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`,
+      { headers: { 'X-Master-Key': CFG.binKey } });
+    if (!r.ok) return;
+    const { record } = await r.json();
+    record.settings = snapshot;
+    await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CFG.binKey },
+      body: JSON.stringify(record)
+    });
+  } catch(e) { /* silent — localStorage is primary, cloud is backup */ }
+}
+
+// ── LIVE PREVIEW ──────────────────────────────────────────
+function livePreview() {
+  const name = document.getElementById('cfgShopName').value;
+  if(name) document.querySelector('.sb-logo-main').textContent = name;
+}
+// ── MANUAL BOOKING ────────────────────────────────────────
+function openManualBooking() {
+  // populate service dropdown
+  const svcSel = document.getElementById('mbService');
+  svcSel.innerHTML = SERVICES.map(s => `<option value="${s.name}" data-price="${s.price}" data-dur="${s.dur}">${s.name} — ${s.price}</option>`).join('');
+
+  // default date to currently viewed schedule day
+  const ds = dStr(schedDay);
+  document.getElementById('mbDate').value = ds;
+
+  // populate time dropdown and check conflicts
+  populateMbTimes();
+
+  // clear fields
+  document.getElementById('mbName').value  = '';
+  document.getElementById('mbPhone').value = '';
+  document.getElementById('mbConflictWarn').style.display = 'none';
+
+  // wire date change to repopulate times
+  document.getElementById('mbDate').onchange = populateMbTimes;
+  document.getElementById('mbTime').onchange = checkMbConflict;
+
+  document.getElementById('manualModal').classList.add('show');
+}
+
+function populateMbTimes() {
+  const date = document.getElementById('mbDate').value;
+  const timeSel = document.getElementById('mbTime');
+
+  // build time list for that day's hours
+  let open = CFG.openHour || 9, close = CFG.closeHour || 18;
+  if (date) {
+    const dow = new Date(date + 'T12:00:00').getDay();
+    if (DAY_HOURS[dow]) { open = DAY_HOURS[dow].open; close = DAY_HOURS[dow].close; }
+  }
+  const step = CFG.slotLen || 30;
+  const slots = [];
+  for (let mins = open * 60; mins < close * 60; mins += step) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const ap = h < 12 ? 'AM' : 'PM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    slots.push(`${h12}:${m.toString().padStart(2, '0')} ${ap}`);
+  }
+  timeSel.innerHTML = slots.map(t => `<option value="${t}">${t}</option>`).join('');
+  checkMbConflict();
+}
+
+function checkMbConflict() {
+  const date = document.getElementById('mbDate').value;
+  const time = document.getElementById('mbTime').value;
+  const warn = document.getElementById('mbConflictWarn');
+  if (!date || !time) { warn.style.display = 'none'; return; }
+  const conflict = DATA.bookings.some(b => b.date === date && b.time === time && b.status !== 'cancelled');
+  warn.style.display = conflict ? 'block' : 'none';
+}
+
+async function saveManualBooking() {
+  const name  = document.getElementById('mbName').value.trim();
+  const phone = document.getElementById('mbPhone').value.trim();
+  const date  = document.getElementById('mbDate').value;
+  const time  = document.getElementById('mbTime').value;
+  const svcEl = document.getElementById('mbService');
+  const svcName  = svcEl.options[svcEl.selectedIndex]?.text || '';
+  const svcPrice = svcEl.options[svcEl.selectedIndex]?.dataset.price || '';
+  const svcDur   = svcEl.options[svcEl.selectedIndex]?.dataset.dur   || '';
+
+  if (!name)  { toast('Enter a client name', 'err'); return; }
+  if (!phone || phone.replace(/\D/g,'').length < 10) { toast('Enter a valid phone number', 'err'); return; }
+  if (!date)  { toast('Pick a date', 'err'); return; }
+
+  const fp = phone.startsWith('+') ? phone : '+1' + phone.replace(/\D/g, '');
+
+  const bk = {
+    id:       `BK-${Date.now()}`,
+    service:  svcName,
+    price:    svcPrice,
+    dur:      svcDur,
+    date,
+    time,
+    name,
+    phone:    fp,
+    status:   'confirmed',
+    bookedAt: new Date().toISOString(),
+    manual:   true,
+  };
+
+  try {
+    // save to JSONBin so the booking page sees the slot as taken
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`,
+      { headers: { 'X-Master-Key': CFG.binKey } });
+    if (!r.ok) throw new Error('fetch failed');
+    const { record } = await r.json();
+    if (!record.bookings) record.bookings = [];
+    if (!record.clients)  record.clients  = [];
+    record.bookings.push(bk);
+    const c = record.clients.find(x => x.phone === fp);
+    if (c) { c.visits++; c.lastVisit = date; }
+    else record.clients.push({ name, phone: fp, visits: 1, lastVisit: date, joinDate: new Date().toISOString().split('T')[0] });
+    await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CFG.binKey },
+      body: JSON.stringify(record)
+    });
+    DATA.bookings.push(bk);
+    DATA.clients = record.clients;
+    closeManualModal();
+    renderAll();
+    toast(`${name} booked for ${time} ✓`, 'ok');
+  } catch(e) {
+    toast('Could not save — check connection', 'err');
+  }
+}
+
+function closeManualModal() {
+  document.getElementById('manualModal').classList.remove('show');
+}
+// ── PANEL NAV ─────────────────────────────────────────────
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const titles = {schedule:'Schedule',bookings:'All Bookings',clients:'Clients',availability:'Availability',settings:'Settings'};
+  document.getElementById('topbarTitle').textContent = titles[name] || name;
+  if(el) el.classList.add('active');
+  // re-render panels that need it
+  if(name==='availability'){ renderDaysGrid(); renderBlockSelects(); renderBlocks(); highlightSlotBtn(); }
+  if(name==='schedule')     renderSchedule();
+  if(name==='bookings')     renderBookings();
+  if(name==='clients')      renderClients();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) closeModal(); });
+
+// ── HELPERS ───────────────────────────────────────────────
+function dStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  setTimeout(() => t.className = 'toast', 2600);
+}
+
+// ── PIN SYSTEM ────────────────────────────────────────────
+const DEFAULT_PIN   = '1234';
+const MASTER_PIN    = '0000'; // override if barber forgets
+let   pinEntry      = '';
+let   pinUnlocked   = false;
+
+async function initPin() {
+  // Try localStorage first (fast path)
+  let cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+
+  // If localStorage is empty, try to pull PIN + shopName from JSONBin before showing screen
+  if (!cfg.dashPin && (CFG.binId && CFG.binKey)) {
+    try {
+      const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`,
+        { headers: { 'X-Master-Key': CFG.binKey } });
+      if (r.ok) {
+        const { record } = await r.json();
+        if (record.settings) {
+          cfg = record.settings;
+          // strip empty keys before saving so config.js values stay intact
+          if (!cfg.binId)  delete cfg.binId;
+          if (!cfg.binKey) delete cfg.binKey;
+          localStorage.setItem('moonCfg', JSON.stringify(cfg));
+        }
+      }
+    } catch(e) { /* fall through to default PIN */ }
+  }
+
+  // update logo to shop name
+  if (cfg.shopName) document.getElementById('pinLogo').textContent = cfg.shopName;
+
+  // check if already unlocked this session
+  if (sessionStorage.getItem('dashUnlocked') === '1') {
+    unlock();
+    return;
+  }
+  // pin screen is visible by default — ensure app stays hidden
+  document.getElementById('app').classList.remove('unlocked');
+}
+
+function pinKey(d) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += d;
+  updatePinDots();
+  if (pinEntry.length === 4) checkPin();
+}
+
+function pinDel() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+  hidePinError();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('pd' + i).classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function checkPin() {
+  const cfg        = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+  const savedPin   = cfg.dashPin || DEFAULT_PIN;
+  const correct    = pinEntry === savedPin || pinEntry === MASTER_PIN;
+
+  if (correct) {
+    if (pinEntry === MASTER_PIN && pinEntry !== savedPin) {
+      // master PIN used — prompt to set a new PIN
+      setTimeout(() => {
+        alert('Master PIN accepted. Go to Settings → API Keys to set a new PIN.');
+      }, 400);
+    }
+    unlock();
+  } else {
+    showPinError('Incorrect PIN');
+    // shake dots
+    const dots = document.getElementById('pinDots');
+    dots.style.transform = 'translateX(8px)';
+    setTimeout(() => dots.style.transform = 'translateX(-8px)', 80);
+    setTimeout(() => dots.style.transform = 'translateX(4px)',  160);
+    setTimeout(() => dots.style.transform = 'translateX(0)',    240);
+    setTimeout(() => { pinEntry = ''; updatePinDots(); }, 300);
+  }
+}
+
+function unlock() {
+  pinUnlocked = true;
+  sessionStorage.setItem('dashUnlocked', '1');
+  document.getElementById('pinScreen').style.display = 'none';
+  document.getElementById('app').classList.add('unlocked');
+}
+
+function showPinError(msg) {
+  const el = document.getElementById('pinError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hidePinError() {
+  document.getElementById('pinError').classList.remove('show');
+}
+
+function showMasterPrompt() {
+  const entered = prompt('Enter master reset PIN:');
+  if (entered === MASTER_PIN) {
+    unlock();
+    setTimeout(() => {
+      showPanel.call(document.querySelector('.sb-item:last-child'), 'settings');
+      showStab('keys', document.querySelector('.stab:last-child'));
+      alert('Go to Settings → API Keys to set your new PIN now.');
+    }, 300);
+  } else if (entered !== null) {
+    showPinError('Wrong master PIN');
+  }
+}
+
+// ── SAVE PIN ──────────────────────────────────────────────
+function savePin() {
+  const np = document.getElementById('newPin').value.trim();
+  const cp = document.getElementById('confirmPin').value.trim();
+  if (np.length !== 4 || !/^\d{4}$/.test(np)) {
+    toast('PIN must be exactly 4 digits', 'err'); return;
+  }
+  if (np !== cp) {
+    toast('PINs do not match', 'err'); return;
+  }
+  if (np === MASTER_PIN) {
+    toast('Cannot use master PIN as your PIN', 'err'); return;
+  }
+  CFG.dashPin = np;
+  persist();
+  document.getElementById('newPin').value = '';
+  document.getElementById('confirmPin').value = '';
+  toast('PIN updated — write it down!', 'ok');
+}
+
+// keyboard support for PIN
+document.addEventListener('keydown', e => {
+  if (pinUnlocked) return;
+  if (e.key >= '0' && e.key <= '9') pinKey(e.key);
+  if (e.key === 'Backspace') pinDel();
+});
+function resetCache() {
+  if (!confirm('Clear all local cache? Settings will re-sync from cloud on next load.')) return;
+  localStorage.clear();
+  sessionStorage.clear();
+  toast('Cache cleared — reloading…', 'ok');
+  setTimeout(() => location.reload(), 1200);
+}
+</script>
+</body>
+</html>
