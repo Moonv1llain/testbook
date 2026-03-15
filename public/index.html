@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TEST</title>
+<title>MOON CUTS</title>
 <script>try{const s=JSON.parse(localStorage.getItem("moonCfg")||"{}");if(s.shopName)document.title=s.shopName+" — Book";} catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;1,700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -108,8 +108,8 @@ header{
   display:flex;flex-direction:column;
   padding:16px 16px 0;
   opacity:0;pointer-events:none;
-  transform:translateX(24px);
-  transition:opacity 0.3s cubic-bezier(0.4,0,0.2,1),transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform:translateX(32px);
+  transition:opacity 0.22s cubic-bezier(0.4,0,0.2,1),transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94);
   overflow:hidden;
 }
 .slide::after{display:none}
@@ -149,7 +149,7 @@ header{
 }
 .svc-row:last-child{border-bottom:none}
 .svc-row:active{background:var(--s2)}
-.svc-row.sel{background:rgba(196,169,125,0.06)}
+.svc-row.sel{background:rgba(196,169,125,0.06);transform:translateX(2px)}
 
 /* left bar */
 .svc-row::before{
@@ -231,7 +231,7 @@ header{
   -webkit-user-select:none;user-select:none;
 }
 .tc:active:not(.taken){transform:scale(0.93)}
-.tc.sel{background:var(--cut);border-color:var(--cut);color:var(--bg);transform:scale(1.03)}
+.tc.sel{background:var(--cut);border-color:var(--cut);color:var(--bg);transform:scale(1.05);font-weight:600;letter-spacing:0.08em}
 .tc.taken{opacity:0.12;cursor:not-allowed;text-decoration:line-through}
 
 /* ── INFO ───────────────────────────── */
@@ -431,6 +431,20 @@ footer{flex-shrink:0;background:var(--bg);padding:8px 16px env(safe-area-inset-b
 .bagain:hover{border-color:var(--dim);color:var(--cream)}
 .succ.show #cashReminder{transform:translateY(0);opacity:1}
 
+/* ── ADD-ONS ────────────────────────── */
+.addon-skip-note{font-size:0.48rem;letter-spacing:0.1em;color:var(--dim);margin-bottom:12px;line-height:1.8;padding:0 2px}
+.addon-check{
+  width:16px;height:16px;border-radius:3px;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  flex-shrink:0;font-size:10px;color:transparent;background:transparent;
+}
+.svc-row.addon-sel .addon-check{border-color:var(--gold);background:var(--gold);color:var(--bg)}
+.svc-row.addon-sel{background:rgba(196,169,125,0.06);transform:translateX(2px)}
+.svc-row.addon-sel::before{transform:scaleY(1)}
+.addon-none{font-size:0.52rem;letter-spacing:0.1em;color:var(--dim);text-align:center;padding:24px 0;font-style:italic}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.54rem;letter-spacing:0.1em;padding:10px 16px;z-index:9999;opacity:0;transition:all 0.2s;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -449,7 +463,7 @@ footer{flex-shrink:0;background:var(--bg);padding:8px 16px env(safe-area-inset-b
     </div>
     <div class="tagline">Cuts &amp; Fades — Book Online</div>
     <div class="hdr-right">
-      <a class="quick-text-btn" id="quickTextBtn" href="#">💬 Text Me </a>
+      <a class="quick-text-btn" id="quickTextBtn" href="#">💬 Text us</a>
       <div class="hdr-date" id="hdrDate"></div>
 
     </div>
@@ -472,9 +486,10 @@ footer{flex-shrink:0;background:var(--bg);padding:8px 16px env(safe-area-inset-b
 
   <div class="step-strip">
     <div class="stp active" id="st1"><span class="stp-num">01</span>Service</div>
-    <div class="stp" id="st2"><span class="stp-num">02</span>When</div>
-    <div class="stp" id="st3"><span class="stp-num">03</span>You</div>
-    <div class="stp" id="st4"><span class="stp-num">04</span>Confirm</div>
+    <div class="stp" id="st2"><span class="stp-num">02</span>Add-Ons</div>
+    <div class="stp" id="st3"><span class="stp-num">03</span>When</div>
+    <div class="stp" id="st4"><span class="stp-num">04</span>You</div>
+    <div class="stp" id="st5"><span class="stp-num">05</span>Confirm</div>
   </div>
 
   <div class="slides">
@@ -482,6 +497,15 @@ footer{flex-shrink:0;background:var(--bg);padding:8px 16px env(safe-area-inset-b
     <div class="slide active" id="slide1">
       <div class="sh"><span class="small">What are we doing</span>Pick your <em>cut</em></div>
       <div class="svc-wrap"><div class="svc-list" id="svcList"></div></div>
+    </div>
+
+    <!-- SLIDE 1B: ADD-ONS -->
+    <div class="slide" id="slide1b">
+      <div class="sh"><span class="small">Anything extra?</span>Add <em>ons.</em></div>
+      <div class="svc-wrap">
+        <div class="addon-skip-note">All optional — select as many as you want, or just hit Skip.</div>
+        <div class="svc-list" id="addonList"></div>
+      </div>
     </div>
 
     <div class="slide" id="slide2">
@@ -584,7 +608,7 @@ const DESC={
   kids:'Clean cut for the young ones.',
 };
 
-let S={slide:1,svc:null,date:null,time:null,payMethod:null,bookedSlots:{}};
+let S={slide:1,svc:null,addons:[],date:null,time:null,payMethod:null,bookedSlots:{}};
 
 // ── APPLY SETTINGS OBJECT → DOM ────────────────────────────
 // Called once from localStorage (fast) then again after cloud fetch (accurate)
@@ -623,6 +647,7 @@ function applySettings(saved) {
     linen:     { '--bg':'#f5f0e8','--s1':'#ede8de','--s2':'#e5e0d4','--text':'#1a1a18','--cut':'#111110','--border':'#d8d0c0','--dim':'#9a9080' },
     cloud:     { '--bg':'#f4f7fc','--s1':'#eaf0f8','--s2':'#dce8f4','--text':'#101828','--cut':'#4a80c4','--border':'#ccdaee','--dim':'#7090b8' },
     mauve:     { '--bg':'#f8f4f6','--s1':'#f0e8ec','--s2':'#e8dce4','--text':'#28141e','--cut':'#b06080','--border':'#e0ccd6','--dim':'#a08090' },
+    
   };
   const t = themes[saved.bgTheme] || themes.smoke;
   Object.entries(t).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
@@ -740,23 +765,21 @@ function applySettings(saved) {
   applyGallery();
   applyQuickText();
   applyWalkinMode();
-  renderSvcs();
-  // show loading until cloud data arrives
-  document.getElementById('dateStrip').innerHTML = '<div style="color:var(--dim);font-size:11px;letter-spacing:0.1em;padding:8px">Loading...</div>';
-  document.getElementById('timeGrid').innerHTML  = '<div style="color:var(--dim);font-size:11px;letter-spacing:0.1em;padding:8px">Loading...</div>';
+ renderSvcs();
   await loadBookings();
   renderDates();
-  renderTimes();
-  // auto-select first available day
+  // auto-select today if it's in the date strip, else select the first available day
   if (!S.date) {
     const firstDay = document.querySelector('#dateStrip .dc');
     if (firstDay) {
       const ds = firstDay.getAttribute('onclick').match(/'([^']+)'/)[1];
       S.date = ds;
-      renderDates();
-      renderTimes();
+      renderDates(); // re-render to show selected state
     }
   }
+  // re-render everything after cloud data is fully loaded
+  renderDates();
+  renderTimes();
   updateFooter();
 })();
 
@@ -806,6 +829,34 @@ function renderSvcs(){
         <div class="svc-radio"><div class="svc-radio-inner"></div></div>
       </div>
     </div>`).join('');
+}
+
+function renderAddons(){
+  const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const addons = cfg._addons || [];
+  const list = document.getElementById('addonList');
+  if(!addons.length){
+    list.innerHTML='<div class="addon-none">No add-ons set up yet.<br>Barber can add them in the dashboard.</div>';
+    return;
+  }
+  list.innerHTML = addons.map(a=>`
+    <div class="svc-row ${S.addons.includes(a.id)?'addon-sel':''}" onclick="toggleAddon('${a.id}')">
+      <div class="svc-left">
+        <div class="svc-name">${a.name}</div>
+        <div class="svc-sub">${a.desc||a.dur||''}</div>
+      </div>
+      <div class="svc-right">
+        <div class="svc-price">${a.price?'+'+a.price:''}</div>
+        <div class="addon-check">✓</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleAddon(id){
+  const i = S.addons.indexOf(id);
+  if(i===-1) S.addons.push(id); else S.addons.splice(i,1);
+  renderAddons();
+  updateFooter();
 }
 
 function renderDates(){
@@ -898,9 +949,14 @@ function renderConfirm(){
   const name=document.getElementById('nameInput').value.trim();
   const phone=document.getElementById('phoneInput').value.trim();
   const dl=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  document.getElementById('cfmSvc').textContent=S.svc.name;
+  const cfg=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const allAddons=cfg._addons||[];
+  const addonNames=S.addons.map(id=>{const a=allAddons.find(x=>x.id===id);return a?a.name:id;});
+  const addonPrices=S.addons.reduce((sum,id)=>{const a=allAddons.find(x=>x.id===id);return sum+(a&&a.priceNum?Number(a.priceNum):0);},0);
+  const totalNote = addonPrices>0 ? ` + $${addonPrices} add-ons` : '';
+  document.getElementById('cfmSvc').textContent=S.svc.name+(addonNames.length?` + ${addonNames.join(', ')}` :'');
   S.payMethod=null;
-  document.getElementById('cfmMeta').textContent=`${S.svc.price} · ${S.svc.dur}`;
+  document.getElementById('cfmMeta').textContent=`${S.svc.price}${totalNote} · ${S.svc.dur}`;
   document.getElementById('cfmGrid').innerHTML=`
     <div class="cfm-cell"><div class="cfm-cell-l">Date</div><div class="cfm-cell-v">${dl}</div></div>
     <div class="cfm-cell"><div class="cfm-cell-l">Time</div><div class="cfm-cell-v">${S.time}</div></div>
@@ -942,29 +998,36 @@ function pickPay(id){
 function pickDate(ds){S.date=ds;S.time=null;renderDates();renderTimes();updateFooter();}
 function pickTime(t){S.time=t;renderTimes();updateFooter();}
 
+// slide order map: logical step number → slide element id
+const SLIDE_IDS = ['slide1','slide1b','slide2','slide3','slide4'];
+
 function nextSlide(){
-  if(S.slide===1){if(!S.svc){toast('Pick a service',true);return;}goTo(2);}
-  else if(S.slide===2){if(!S.date||!S.time){toast('Pick a date and time',true);return;}goTo(3);}
-  else if(S.slide===3){
+  if(S.slide===1){if(!S.svc){toast('Pick a service',true);return;}renderAddons();goTo(2);}
+  else if(S.slide===2){goTo(3);} // add-ons always skippable
+  else if(S.slide===3){if(!S.date||!S.time){toast('Pick a date and time',true);return;}goTo(4);}
+  else if(S.slide===4){
     const n=document.getElementById('nameInput').value.trim();
     const p=document.getElementById('phoneInput').value.trim();
     if(!n){toast("What's your name?",true);return;}
     if(!p||p.replace(/\D/g,'').length<10){toast('Need your phone number',true);return;}
-    renderConfirm();goTo(4);
-  }else if(S.slide===4){confirmBooking();}
+    renderConfirm();goTo(5);
+  }else if(S.slide===5){confirmBooking();}
 }
 
 function prevSlide(){if(S.slide>1)goTo(S.slide-1);}
 
 function goTo(n){
-  const prev=document.getElementById(`slide${S.slide}`);
-  prev.classList.remove('active');prev.classList.add('exit');
-  setTimeout(()=>prev.classList.remove('exit'),320);
+  const prevId = SLIDE_IDS[S.slide-1];
+  const prev = document.getElementById(prevId);
+  if(prev){prev.classList.remove('active');prev.classList.add('exit');setTimeout(()=>prev.classList.remove('exit'),320);}
   S.slide=n;
-  const next=document.getElementById(`slide${n}`);
-  next.style.transform='translateX(24px)';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{next.classList.add('active');next.style.transform='';}));
-  ['st1','st2','st3','st4'].forEach((id,i)=>{document.getElementById(id).className='stp'+(i+1<n?' done':i+1===n?' active':'');});
+  const nextId = SLIDE_IDS[n-1];
+  const next = document.getElementById(nextId);
+  if(next){next.style.transform='translateX(24px)';requestAnimationFrame(()=>requestAnimationFrame(()=>{next.classList.add('active');next.style.transform='';}));}
+  ['st1','st2','st3','st4','st5'].forEach((id,i)=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.className='stp'+(i+1<n?' done':i+1===n?' active':'');
+  });
   document.getElementById('btnBack').className='bbk'+(n>1?'':' hidden');
   updateFooter();
 }
@@ -972,11 +1035,20 @@ function goTo(n){
 function updateFooter(){
   const btn=document.getElementById('btnNext');
   const st=document.getElementById('fStatus');
-  const set=(t,on)=>{btn.querySelector('.bt').textContent=t;btn.disabled=!on;};
+  const set=(t,on,lbl)=>{btn.querySelector('.bt').textContent=t;btn.disabled=!on;};
   if(S.slide===1){set('Next →',!!S.svc);st.textContent=S.svc?`${S.svc.name} · ${S.svc.price} · ${S.svc.dur}`:'Select a service';st.className='fs'+(S.svc?' on':'');}
-  else if(S.slide===2){const ok=S.date&&S.time;set('Next →',!!ok);const dl=S.date?new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'';st.textContent=ok?`${dl} · ${S.time}`:S.date?'Now pick a time':'Pick a day first';st.className='fs'+(ok?' on':'');}
-  else if(S.slide===3){const n=document.getElementById('nameInput')?.value.trim();const p=document.getElementById('phoneInput')?.value.trim();const ok=n&&p&&p.replace(/\D/g,'').length>=10;set('Review →',!!ok);st.textContent=ok?'Looking good':'Fill in your details';st.className='fs'+(ok?' on':'');}
-  else if(S.slide===4){set('Confirm Booking',true);st.textContent='2-hour cancellation policy';st.className='fs on';}
+  else if(S.slide===2){
+    const cnt=S.addons.length;
+    set(cnt?`Continue with ${cnt} add-on${cnt>1?'s':''}  →`:'Skip Add-Ons →',true);
+    const cfg=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+    const allAddons=cfg._addons||[];
+    const names=S.addons.map(id=>{const a=allAddons.find(x=>x.id===id);return a?a.name:id;}).join(', ');
+    st.textContent=cnt?`+ ${names}`:'Optional — skip or select extras';
+    st.className='fs'+(cnt?' on':'');
+  }
+  else if(S.slide===3){const ok=S.date&&S.time;set('Next →',!!ok);const dl=S.date?new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'';st.textContent=ok?`${dl} · ${S.time}`:S.date?'Now pick a time':'Pick a day first';st.className='fs'+(ok?' on':'');}
+  else if(S.slide===4){const n=document.getElementById('nameInput')?.value.trim();const p=document.getElementById('phoneInput')?.value.trim();const ok=n&&p&&p.replace(/\D/g,'').length>=10;set('Review →',!!ok);st.textContent=ok?'Looking good':'Fill in your details';st.className='fs'+(ok?' on':'');}
+  else if(S.slide===5){set('Confirm Booking',true);st.textContent='2-hour cancellation policy';st.className='fs on';}
 }
 
 document.addEventListener('input',e=>{if(e.target.id==='nameInput'||e.target.id==='phoneInput')updateFooter();});
@@ -992,7 +1064,10 @@ async function confirmBooking(){
   const spinSafe = setTimeout(() => { btn.classList.remove('loading'); btn.disabled=false; }, 10000);
 
   try {
-  const bk={id:`BK-${Date.now()}`,service:S.svc.name,price:S.svc.price,dur:S.svc.dur,date:S.date,time:S.time,name,phone:fp,status:'confirmed',bookedAt:new Date().toISOString()};
+  const cfg2=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const allAddons2=cfg2._addons||[];
+  const addonNames2=S.addons.map(id=>{const a=allAddons2.find(x=>x.id===id);return a?a.name:id;});
+  const bk={id:`BK-${Date.now()}`,service:S.svc.name,price:S.svc.price,dur:S.svc.dur,addons:addonNames2,date:S.date,time:S.time,name,phone:fp,status:'confirmed',bookedAt:new Date().toISOString()};
   await saveBooking(bk);
   const dl=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   const payLabel = 'Cash at the shop';
@@ -1004,6 +1079,7 @@ async function confirmBooking(){
   const dlLong=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('sCard').innerHTML=`
     <div class="sr"><span class="k">Service</span><span class="v">${S.svc.name} — ${S.svc.price}</span></div>
+    ${addonNames2.length?`<div class="sr"><span class="k">Add-Ons</span><span class="v">${addonNames2.join(', ')}</span></div>`:''}
     <div class="sr"><span class="k">Date</span><span class="v">${dlLong}</span></div>
     <div class="sr"><span class="k">Time</span><span class="v">${S.time}</span></div>
     <div class="sr"><span class="k">Confirmation</span><span class="v">${(()=>{const c=JSON.parse(localStorage.getItem('moonCfg')||'{}');return c.smsEnabled===false?'Barber will text you':'Text sent to '+phone;})()}</span></div>`;
@@ -1037,11 +1113,11 @@ async function sendSMS(to,body){
 
 function resetBooking(){
   document.getElementById('successScreen').classList.remove('show');
-  S={slide:1,svc:null,date:null,time:null,payMethod:null,bookedSlots:S.bookedSlots};
+  S={slide:1,svc:null,addons:[],date:null,time:null,payMethod:null,bookedSlots:S.bookedSlots};
   document.getElementById('nameInput').value='';document.getElementById('phoneInput').value='';
-  ['slide2','slide3','slide4'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  ['slide1b','slide2','slide3','slide4'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('slide1').classList.add('active');
-  ['st1','st2','st3','st4'].forEach((id,i)=>document.getElementById(id).className='stp'+(i===0?' active':''));
+  ['st1','st2','st3','st4','st5'].forEach((id,i)=>document.getElementById(id).className='stp'+(i===0?' active':''));
   document.getElementById('btnBack').className='bbk hidden';
 
   applyVacationMode();
