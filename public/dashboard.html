@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dashboard — TEST </title>
+<title>Dashboard — Moon Cuts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
@@ -692,7 +692,7 @@ body{
 
 <!-- ══ PIN SCREEN ══ -->
 <div id="pinScreen">
-  <div class="pin-wordmark" id="pinLogo">YOUR DASHBOARD</div>
+  <div class="pin-wordmark" id="pinLogo">Moon Cuts</div>
   <div class="pin-tagline">Barber Dashboard</div>
   <div class="pin-dots" id="pinDots">
     <div class="pin-dot" id="pd0"></div>
@@ -856,6 +856,7 @@ body{
     <div class="stab-bar">
       <div class="stab active" onclick="showStab('shop',this)">My Shop</div>
       <div class="stab" onclick="showStab('services',this)">Services</div>
+      <div class="stab" onclick="showStab('addons',this)">Add-Ons</div>
       <div class="stab" onclick="showStab('appearance',this)">Look & Feel</div>
       <div class="stab" onclick="showStab('rules',this)">Rules</div>
       <div class="stab" onclick="showStab('gallery',this)">Photos</div>
@@ -959,6 +960,22 @@ body{
           </select>
         </div>
         <div class="bf-group" style="margin-bottom:0"><label class="bf-label">&nbsp;</label><button class="add-svc-btn" onclick="addService()">+ Add Service</button></div>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- TAB: ADD-ONS -->
+    <div class="stab-panel" id="stab-addons">
+      <div class="cfg-section">Add-On Services</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.8">These appear as optional extras after the client picks their main service. They can select multiple. Leave price blank for free / price-on-request.</div>
+      <div class="svc-editor-list" id="addonEditorList"></div>
+      <div class="cfg-section">Add New Add-On</div>
+      <div class="add-svc-form" style="grid-template-columns:1fr 80px 1fr auto">
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Name</label><input class="bf-input" id="newAddonName" placeholder="e.g. Hot Towel"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Price ($)</label><input class="bf-input" id="newAddonPrice" placeholder="10" type="number" min="0"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Short Description</label><input class="bf-input" id="newAddonDesc" placeholder="e.g. Classic hot towel finish"></div>
+        <div class="bf-group" style="margin-bottom:0"><label class="bf-label">&nbsp;</label><button class="add-svc-btn" onclick="addAddon()">+ Add</button></div>
       </div>
     </div>
 
@@ -1534,7 +1551,7 @@ function renderSchedule() {
           <div class="ts-time">${t}</div>
           <div class="ts-content">
             <div class="ts-client-name">${bk.name}</div>
-            <div class="ts-svc-line">${bk.service} · ${bk.price}</div>
+            <div class="ts-svc-line">${bk.service}${bk.addons&&bk.addons.length?' + '+bk.addons.join(', '):''}  · ${bk.price}</div>
             <div class="ts-actions">
               <button class="act-btn confirm ${bk.smsConfirmed?'sent':''}" onclick="confirmClient('${bk.id}')">${bk.smsConfirmed?'✓ Sent':'✓ Confirm'}</button>
               <button class="act-btn reschedule" onclick="rescheduleClient('${bk.id}')">🔁</button>
@@ -1779,6 +1796,7 @@ function viewBooking(id) {
   document.getElementById('modalTitle').textContent = 'Booking — ' + (b.name||'Unknown');
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-row"><span class="k">Service</span><span class="v">${b.service}</span></div>
+    ${b.addons && b.addons.length ? `<div class="modal-row"><span class="k">Add-Ons</span><span class="v" style="color:var(--gold)">${b.addons.join(', ')}</span></div>` : ''}
     <div class="modal-row"><span class="k">Price</span><span class="v" style="color:var(--gold)">${b.price}</span></div>
     <div class="modal-row"><span class="k">Date</span><span class="v">${dl}</span></div>
     <div class="modal-row"><span class="k">Time</span><span class="v">${b.time}</span></div>
@@ -2026,6 +2044,7 @@ function showStab(name, el) {
   el.classList.add('active');
   // re-render dynamic content each time tab opens
   if(name==='services')   renderSvcEditor();
+  if(name==='addons')     renderAddonEditor();
   if(name==='appearance'){ renderSwatches(); renderThemeGrid(); renderFontGrid(); }
   if(name==='reviews')    loadDashReviews();
 }
@@ -2066,6 +2085,7 @@ function renderSettings() {
 
   // services editor
   renderSvcEditor();
+  renderAddonEditor();
   loadCopyFields();
   // walk-in & quick text toggles
   if(CFG.walkinOn)    document.getElementById('togWalkin')?.classList.add('on');
@@ -2230,6 +2250,72 @@ function saveServices() {
   // update live SERVICES array
   SERVICES.length = 0;
   editServices.forEach(s => SERVICES.push(s));
+}
+
+// ── ADD-ONS EDITOR ────────────────────────────────────────
+function getAddons() {
+  const cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+  return cfg._addons || [];
+}
+
+function renderAddonEditor() {
+  const addons = getAddons();
+  const list = document.getElementById('addonEditorList');
+  if (!list) return;
+  if (!addons.length) {
+    list.innerHTML = `<div class="empty-state" style="padding:24px"><div class="empty-icon" style="font-size:1.5rem">✂️</div><div class="empty-label">No add-ons yet — add one below</div></div>`;
+    return;
+  }
+  list.innerHTML = addons.map((a, i) => `
+    <div class="svc-row" data-i="${i}">
+      <span class="svc-name" contenteditable="true" onblur="editAddonField(${i},'name',this.textContent)">${a.name}</span>
+      <span class="svc-price" contenteditable="true" onblur="editAddonField(${i},'price',this.textContent)" style="cursor:text">$<span>${a.priceNum || 0}</span></span>
+      <span class="svc-dur" style="flex:1;text-align:left;margin-left:8px;color:var(--dim);font-size:0.44rem">${a.desc || ''}</span>
+      <button class="svc-del" onclick="deleteAddon(${i})">✕</button>
+    </div>`).join('');
+}
+
+function editAddonField(i, field, val) {
+  const addons = getAddons();
+  if (field === 'price') {
+    const num = parseInt(val.replace(/\D/g, '')) || 0;
+    addons[i].priceNum = num;
+    addons[i].price = '$' + num;
+  } else {
+    addons[i][field] = val.trim();
+  }
+  saveAddons(addons);
+}
+
+function deleteAddon(i) {
+  const addons = getAddons();
+  addons.splice(i, 1);
+  saveAddons(addons);
+  renderAddonEditor();
+  toast('Add-on removed', 'ok');
+}
+
+function addAddon() {
+  const name  = document.getElementById('newAddonName').value.trim();
+  const price = parseInt(document.getElementById('newAddonPrice').value) || 0;
+  const desc  = document.getElementById('newAddonDesc').value.trim();
+  if (!name) { toast('Enter an add-on name', 'err'); return; }
+  const addons = getAddons();
+  addons.push({ id: 'ao' + Date.now(), name, price: price ? '$' + price : '', priceNum: price, desc });
+  saveAddons(addons);
+  renderAddonEditor();
+  document.getElementById('newAddonName').value = '';
+  document.getElementById('newAddonPrice').value = '';
+  document.getElementById('newAddonDesc').value = '';
+  toast('Add-on added ✓', 'ok');
+}
+
+function saveAddons(addons) {
+  const cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+  cfg._addons = addons;
+  localStorage.setItem('moonCfg', JSON.stringify(cfg));
+  Object.assign(CFG, cfg);
+  persist();
 }
 
 // ── APPEARANCE ────────────────────────────────────────────
@@ -2440,6 +2526,7 @@ let _persistTimer = null;
 function persist() {
   localStorage.setItem('moonCfg', JSON.stringify(CFG));
   // also save auxiliary keys into CFG snapshot so they restore together
+  const cfgSnap  = JSON.parse(localStorage.getItem('moonCfg') || '{}');
   const snapshot = {
     ...CFG,
     _workDays:  WORK_DAYS,
@@ -2447,6 +2534,7 @@ function persist() {
     _blocks:    BLOCKS,
     _services:  JSON.parse(localStorage.getItem('moonServices') || '[]'),
     _reviews:   JSON.parse(localStorage.getItem('moonReviews')  || '[]'),
+    _addons:    cfgSnap._addons || [],
   };
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(() => backupSettingsToCloud(snapshot), 2000);
@@ -2650,7 +2738,6 @@ async function initPin() {
   }
 
   // update logo to shop name
-  
   if (cfg.shopName) {
     document.getElementById('pinLogo').textContent = cfg.shopName;
     document.getElementById('topShopName').textContent = cfg.shopName;
