@@ -698,10 +698,14 @@ function applySettings(saved) {
     cfg._blocks = saved._blocks;
     localStorage.setItem('moonCfg', JSON.stringify(cfg));
   }
-  // rebuild TIMES
-  const open    = MOON_CONFIG.OPEN_HOUR  || 9;
-  const close   = MOON_CONFIG.CLOSE_HOUR || 18;
-  const slotLen = saved.slotLen || 30;
+  // rebuild TIMES — read from saved settings first, fall back to config.js
+  const open    = saved.openHour  || MOON_CONFIG.OPEN_HOUR  || 9;
+  const close   = saved.closeHour || MOON_CONFIG.CLOSE_HOUR || 18;
+  const slotLen = saved.slotLen   || MOON_CONFIG.SLOT_LEN   || 30;
+  // keep MOON_CONFIG in sync so any legacy code reading it stays correct
+  MOON_CONFIG.OPEN_HOUR  = open;
+  MOON_CONFIG.CLOSE_HOUR = close;
+  MOON_CONFIG.SLOT_LEN   = slotLen;
   TIMES.length = 0;
   for(let mins = open*60; mins < close*60; mins += slotLen){
     const h=Math.floor(mins/60), m=mins%60, ap=h<12?'AM':'PM', h12=h===0?12:h>12?h-12:h;
@@ -783,15 +787,17 @@ function applySettings(saved) {
   updateFooter();
 })();
 
+// ── CACHED RECORD — fetched once on load, reused on save ──
+let _cachedRecord = null;
+
 async function loadBookings(){
   try{
     const r=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CFG.JSONBIN_API_KEY}});
     if(!r.ok)return;
     const{record}=await r.json();
-    console.log('CLOUD RECORD settings._blocks:', JSON.stringify(record.settings?._blocks));
+    _cachedRecord = record;
     S.bookedSlots={};
     (record.bookings||[]).filter(b=>b.status!=='cancelled').forEach(b=>{if(!S.bookedSlots[b.date])S.bookedSlots[b.date]=[];S.bookedSlots[b.date].push(b.time);});
-    // load blocks + settings directly from cloud so ALL devices see them
     if(record.settings){
       if(record.settings._blocks)   localStorage.setItem('moonBlocks',   JSON.stringify(record.settings._blocks));
       if(record.settings._dayHours) localStorage.setItem('moonDayHours', JSON.stringify(record.settings._dayHours));
@@ -801,12 +807,15 @@ async function loadBookings(){
 }
 
 async function saveBooking(bk){
-  // Fresh GET immediately before PUT to avoid race conditions / overwriting concurrent changes
-  const r=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CFG.JSONBIN_API_KEY}});
-  if(!r.ok) throw new Error('Could not reach booking system: '+r.status);
-  const j=await r.json();
-  const record=j.record||{};
-  // Preserve everything in the record (settings etc) — only touch bookings + clients
+  // Use cached record from page load — skips a GET call, making booking ~2x faster
+  // Falls back to fresh GET only if cache is gone (very long session)
+  let record = _cachedRecord;
+  if(!record){
+    const r=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CFG.JSONBIN_API_KEY}});
+    if(!r.ok) throw new Error('Could not reach booking system: '+r.status);
+    const j=await r.json();
+    record = j.record||{};
+  }
   if(!record.bookings) record.bookings=[];
   if(!record.clients)  record.clients=[];
   record.bookings.push(bk);
@@ -815,6 +824,7 @@ async function saveBooking(bk){
   else record.clients.push({name:bk.name,phone:bk.phone,visits:1,lastVisit:bk.date,joinDate:new Date().toISOString().split('T')[0]});
   const w=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CFG.JSONBIN_API_KEY},body:JSON.stringify(record)});
   if(!w.ok) throw new Error('Failed to save booking: '+w.status);
+  _cachedRecord = record; // keep cache fresh for next booking in same session
 }
 
 function renderSvcs(){
@@ -880,8 +890,8 @@ function renderDates(){
     // for today: check if any slots remain (with 30min buffer)
     if(ds === todayStr){
       const dh = dayHours[dow];
-      const open  = dh ? dh.open  : (MOON_CONFIG.OPEN_HOUR  || 9);
-      const close = dh ? dh.close : (MOON_CONFIG.CLOSE_HOUR || 18);
+      const open  = dh ? dh.open  : (saved.openHour  || MOON_CONFIG.OPEN_HOUR  || 9);
+      const close = dh ? dh.close : (saved.closeHour || MOON_CONFIG.CLOSE_HOUR || 18);
       const lastSlotMins = close*60 - slotStep;
       if(nowMins + 30 >= lastSlotMins) continue; // no usable slots left today
     }
@@ -898,17 +908,17 @@ function renderTimes(){
   document.getElementById('timeLabel').textContent = lbl;
 
   // get per-day hours if set, else fall back to global
-  let open  = MOON_CONFIG.OPEN_HOUR  || 9;
-  let close = MOON_CONFIG.CLOSE_HOUR || 18;
+  const _cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
+  let open  = _cfg.openHour  || MOON_CONFIG.OPEN_HOUR  || 9;
+  let close = _cfg.closeHour || MOON_CONFIG.CLOSE_HOUR || 18;
   if (S.date) {
     const dow = new Date(S.date+'T12:00:00').getDay();
-    const saved = JSON.parse(localStorage.getItem('moonCfg') || '{}');
-    const dayHours = saved._dayHours || JSON.parse(localStorage.getItem('moonDayHours') || '{}');
+    const dayHours = _cfg._dayHours || JSON.parse(localStorage.getItem('moonDayHours') || '{}');
     if (dayHours[dow]) { open = dayHours[dow].open; close = dayHours[dow].close; }
   }
 
-  // build times for this specific day
-  const step = MOON_CONFIG.SLOT_LEN || 30;
+  // build times for this specific day — use saved slot length, not config.js default
+  const step = _cfg.slotLen || MOON_CONFIG.SLOT_LEN || 30;
   const slots = [];
   for (let mins = open*60; mins < close*60; mins += step) {
     const h = Math.floor(mins/60), m = mins%60;
