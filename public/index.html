@@ -1065,7 +1065,7 @@ async function confirmBooking(){
   const bk={id:`BK-${Date.now()}`,service:S.svc.name,price:S.svc.price,dur:S.svc.dur,addons:_addonNames,date:S.date,time:S.time,name,phone:fp,status:'confirmed',bookedAt:new Date().toISOString()};
   await saveBooking(bk);
   const dl=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  const payLabel = 'Cash at the shop';
+  const payLabel = 'Cash in Person';
   const smsBody = buildSMS(name, S.svc.name, dl, S.time, payLabel);
   await sendSMS(fp, smsBody);
 
@@ -1250,7 +1250,7 @@ function renderSuccessPayments() {
   html += `<div style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:13px 16px;margin-bottom:7px">
     <span style="font-size:1.2rem">💵</span>
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--cut)">Cash at the shop</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--cut)">Cash in Person</div>
       <div style="font-size:0.75rem;letter-spacing:0.04em;color:var(--dim);font-family:'DM Mono',monospace">Pay when you arrive — no need to do anything now</div>
     </div>
   </div>`;
