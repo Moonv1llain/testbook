@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ZOOCUTZ</title>
+<title>Zoocutz</title>
 <script>try{const s=JSON.parse(localStorage.getItem("moonCfg")||"{}");if(s.shopName)document.title=s.shopName+" — Book";} catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;1,700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -458,12 +458,12 @@ footer{flex-shrink:0;background:var(--bg);padding:8px 16px env(safe-area-inset-b
   <header>
     <div class="hdr-accent"></div>
     <div style="display:flex;align-items:baseline;gap:6px;grid-column:1;grid-row:1">
-      <div class="logo" id="logoText">MOON</div>
+      <div class="logo" id="logoText">Zoocutz</div>
       <a href="dashboard.html"><button class="lock-btn" title="Barber dashboard">🔒</button></a>
     </div>
     <div class="tagline">Cuts &amp; Fades — Book Online</div>
     <div class="hdr-right">
-      <a class="quick-text-btn" id="quickTextBtn" href="#">💬 Text Me</a>
+      <a class="quick-text-btn" id="quickTextBtn" href="#">💬 Text us</a>
       <div class="hdr-date" id="hdrDate"></div>
 
     </div>
@@ -698,14 +698,11 @@ function applySettings(saved) {
     cfg._blocks = saved._blocks;
     localStorage.setItem('moonCfg', JSON.stringify(cfg));
   }
-  // rebuild TIMES — read from saved settings first, fall back to config.js
+  // rebuild TIMES
   const open    = saved.openHour  || MOON_CONFIG.OPEN_HOUR  || 9;
   const close   = saved.closeHour || MOON_CONFIG.CLOSE_HOUR || 18;
   const slotLen = saved.slotLen   || MOON_CONFIG.SLOT_LEN   || 30;
-  // keep MOON_CONFIG in sync so any legacy code reading it stays correct
-  MOON_CONFIG.OPEN_HOUR  = open;
-  MOON_CONFIG.CLOSE_HOUR = close;
-  MOON_CONFIG.SLOT_LEN   = slotLen;
+  MOON_CONFIG.OPEN_HOUR=open; MOON_CONFIG.CLOSE_HOUR=close; MOON_CONFIG.SLOT_LEN=slotLen;
   TIMES.length = 0;
   for(let mins = open*60; mins < close*60; mins += slotLen){
     const h=Math.floor(mins/60), m=mins%60, ap=h<12?'AM':'PM', h12=h===0?12:h>12?h-12:h;
@@ -787,34 +784,31 @@ function applySettings(saved) {
   updateFooter();
 })();
 
-// ── CACHED RECORD — fetched once on load, reused on save ──
-let _cachedRecord = null;
+let _cachedRecord=null;
 
 async function loadBookings(){
   try{
     const r=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CFG.JSONBIN_API_KEY}});
     if(!r.ok)return;
     const{record}=await r.json();
-    _cachedRecord = record;
+    _cachedRecord=record;
     S.bookedSlots={};
     (record.bookings||[]).filter(b=>b.status!=='cancelled').forEach(b=>{if(!S.bookedSlots[b.date])S.bookedSlots[b.date]=[];S.bookedSlots[b.date].push(b.time);});
     if(record.settings){
       if(record.settings._blocks)   localStorage.setItem('moonBlocks',   JSON.stringify(record.settings._blocks));
       if(record.settings._dayHours) localStorage.setItem('moonDayHours', JSON.stringify(record.settings._dayHours));
-      if(record.settings._workDays) MOON_CONFIG.WORK_DAYS = record.settings._workDays;
+      if(record.settings._workDays) MOON_CONFIG.WORK_DAYS=record.settings._workDays;
     }
   }catch(e){}
 }
 
 async function saveBooking(bk){
-  // Use cached record from page load — skips a GET call, making booking ~2x faster
-  // Falls back to fresh GET only if cache is gone (very long session)
-  let record = _cachedRecord;
+  let record=_cachedRecord;
   if(!record){
     const r=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CFG.JSONBIN_API_KEY}});
     if(!r.ok) throw new Error('Could not reach booking system: '+r.status);
     const j=await r.json();
-    record = j.record||{};
+    record=j.record||{};
   }
   if(!record.bookings) record.bookings=[];
   if(!record.clients)  record.clients=[];
@@ -824,7 +818,7 @@ async function saveBooking(bk){
   else record.clients.push({name:bk.name,phone:bk.phone,visits:1,lastVisit:bk.date,joinDate:new Date().toISOString().split('T')[0]});
   const w=await fetch(`https://api.jsonbin.io/v3/b/${CFG.JSONBIN_BIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CFG.JSONBIN_API_KEY},body:JSON.stringify(record)});
   if(!w.ok) throw new Error('Failed to save booking: '+w.status);
-  _cachedRecord = record; // keep cache fresh for next booking in same session
+  _cachedRecord=record;
 }
 
 function renderSvcs(){
@@ -842,14 +836,11 @@ function renderSvcs(){
 }
 
 function renderAddons(){
-  const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
-  const addons = cfg._addons || [];
-  const list = document.getElementById('addonList');
-  if(!addons.length){
-    list.innerHTML='<div class="addon-none">No add-ons set up yet.<br>Barber can add them in the dashboard.</div>';
-    return;
-  }
-  list.innerHTML = addons.map(a=>`
+  const cfg=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const addons=cfg._addons||[];
+  const list=document.getElementById('addonList');
+  if(!addons.length){list.innerHTML='<div class="addon-none">No add-ons set up yet.<br>Barber can add them in the dashboard.</div>';return;}
+  list.innerHTML=addons.map(a=>`
     <div class="svc-row ${S.addons.includes(a.id)?'addon-sel':''}" onclick="toggleAddon('${a.id}')">
       <div class="svc-left">
         <div class="svc-name">${a.name}</div>
@@ -863,10 +854,9 @@ function renderAddons(){
 }
 
 function toggleAddon(id){
-  const i = S.addons.indexOf(id);
-  if(i===-1) S.addons.push(id); else S.addons.splice(i,1);
-  renderAddons();
-  updateFooter();
+  const i=S.addons.indexOf(id);
+  if(i===-1)S.addons.push(id);else S.addons.splice(i,1);
+  renderAddons();updateFooter();
 }
 
 function renderDates(){
@@ -889,9 +879,9 @@ function renderDates(){
 
     // for today: check if any slots remain (with 30min buffer)
     if(ds === todayStr){
-      const dh = dayHours[dow];
-      const open  = dh ? dh.open  : (saved.openHour  || MOON_CONFIG.OPEN_HOUR  || 9);
-      const close = dh ? dh.close : (saved.closeHour || MOON_CONFIG.CLOSE_HOUR || 18);
+      const dh=dayHours[dow];
+      const open=dh?dh.open:(saved.openHour||MOON_CONFIG.OPEN_HOUR||9);
+      const close=dh?dh.close:(saved.closeHour||MOON_CONFIG.CLOSE_HOUR||18);
       const lastSlotMins = close*60 - slotStep;
       if(nowMins + 30 >= lastSlotMins) continue; // no usable slots left today
     }
@@ -908,17 +898,18 @@ function renderTimes(){
   document.getElementById('timeLabel').textContent = lbl;
 
   // get per-day hours if set, else fall back to global
-  const _cfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
-  let open  = _cfg.openHour  || MOON_CONFIG.OPEN_HOUR  || 9;
-  let close = _cfg.closeHour || MOON_CONFIG.CLOSE_HOUR || 18;
-  if (S.date) {
-    const dow = new Date(S.date+'T12:00:00').getDay();
-    const dayHours = _cfg._dayHours || JSON.parse(localStorage.getItem('moonDayHours') || '{}');
-    if (dayHours[dow]) { open = dayHours[dow].open; close = dayHours[dow].close; }
+  const _cfgRT=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  let open=_cfgRT.openHour||MOON_CONFIG.OPEN_HOUR||9;
+  let close=_cfgRT.closeHour||MOON_CONFIG.CLOSE_HOUR||18;
+  if(S.date){
+    const dow=new Date(S.date+'T12:00:00').getDay();
+    const dayHours=_cfgRT._dayHours||JSON.parse(localStorage.getItem('moonDayHours')||'{}');
+    if(dayHours[dow]){open=dayHours[dow].open;close=dayHours[dow].close;}
   }
 
-  // build times for this specific day — use saved slot length, not config.js default
-  const step = _cfg.slotLen || MOON_CONFIG.SLOT_LEN || 30;
+  // build times for this specific day
+  const _cfg=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const step=_cfg.slotLen||MOON_CONFIG.SLOT_LEN||30;
   const slots = [];
   for (let mins = open*60; mins < close*60; mins += step) {
     const h = Math.floor(mins/60), m = mins%60;
@@ -962,11 +953,9 @@ function renderConfirm(){
   const cfg=JSON.parse(localStorage.getItem('moonCfg')||'{}');
   const allAddons=cfg._addons||[];
   const addonNames=S.addons.map(id=>{const a=allAddons.find(x=>x.id===id);return a?a.name:id;});
-  const addonPrices=S.addons.reduce((sum,id)=>{const a=allAddons.find(x=>x.id===id);return sum+(a&&a.priceNum?Number(a.priceNum):0);},0);
-  const totalNote = addonPrices>0 ? ` + $${addonPrices} add-ons` : '';
-  document.getElementById('cfmSvc').textContent=S.svc.name+(addonNames.length?` + ${addonNames.join(', ')}` :'');
+  document.getElementById('cfmSvc').textContent=S.svc.name+(addonNames.length?' + '+addonNames.join(', '):'');
   S.payMethod=null;
-  document.getElementById('cfmMeta').textContent=`${S.svc.price}${totalNote} · ${S.svc.dur}`;
+  document.getElementById('cfmMeta').textContent=`${S.svc.price} · ${S.svc.dur}`;
   document.getElementById('cfmGrid').innerHTML=`
     <div class="cfm-cell"><div class="cfm-cell-l">Date</div><div class="cfm-cell-v">${dl}</div></div>
     <div class="cfm-cell"><div class="cfm-cell-l">Time</div><div class="cfm-cell-v">${S.time}</div></div>
@@ -1008,12 +997,11 @@ function pickPay(id){
 function pickDate(ds){S.date=ds;S.time=null;renderDates();renderTimes();updateFooter();}
 function pickTime(t){S.time=t;renderTimes();updateFooter();}
 
-// slide order map: logical step number → slide element id
 const SLIDE_IDS = ['slide1','slide1b','slide2','slide3','slide4'];
 
 function nextSlide(){
   if(S.slide===1){if(!S.svc){toast('Pick a service',true);return;}renderAddons();goTo(2);}
-  else if(S.slide===2){goTo(3);} // add-ons always skippable
+  else if(S.slide===2){goTo(3);}
   else if(S.slide===3){if(!S.date||!S.time){toast('Pick a date and time',true);return;}goTo(4);}
   else if(S.slide===4){
     const n=document.getElementById('nameInput').value.trim();
@@ -1027,17 +1015,14 @@ function nextSlide(){
 function prevSlide(){if(S.slide>1)goTo(S.slide-1);}
 
 function goTo(n){
-  const prevId = SLIDE_IDS[S.slide-1];
-  const prev = document.getElementById(prevId);
+  const prevId=SLIDE_IDS[S.slide-1];
+  const prev=document.getElementById(prevId);
   if(prev){prev.classList.remove('active');prev.classList.add('exit');setTimeout(()=>prev.classList.remove('exit'),320);}
   S.slide=n;
-  const nextId = SLIDE_IDS[n-1];
-  const next = document.getElementById(nextId);
+  const nextId=SLIDE_IDS[n-1];
+  const next=document.getElementById(nextId);
   if(next){next.style.transform='translateX(24px)';requestAnimationFrame(()=>requestAnimationFrame(()=>{next.classList.add('active');next.style.transform='';}));}
-  ['st1','st2','st3','st4','st5'].forEach((id,i)=>{
-    const el=document.getElementById(id);if(!el)return;
-    el.className='stp'+(i+1<n?' done':i+1===n?' active':'');
-  });
+  ['st1','st2','st3','st4','st5'].forEach((id,i)=>{const el=document.getElementById(id);if(!el)return;el.className='stp'+(i+1<n?' done':i+1===n?' active':'');});
   document.getElementById('btnBack').className='bbk'+(n>1?'':' hidden');
   updateFooter();
 }
@@ -1045,7 +1030,7 @@ function goTo(n){
 function updateFooter(){
   const btn=document.getElementById('btnNext');
   const st=document.getElementById('fStatus');
-  const set=(t,on,lbl)=>{btn.querySelector('.bt').textContent=t;btn.disabled=!on;};
+  const set=(t,on)=>{btn.querySelector('.bt').textContent=t;btn.disabled=!on;};
   if(S.slide===1){set('Next →',!!S.svc);st.textContent=S.svc?`${S.svc.name} · ${S.svc.price} · ${S.svc.dur}`:'Select a service';st.className='fs'+(S.svc?' on':'');}
   else if(S.slide===2){
     const cnt=S.addons.length;
@@ -1074,10 +1059,10 @@ async function confirmBooking(){
   const spinSafe = setTimeout(() => { btn.classList.remove('loading'); btn.disabled=false; }, 10000);
 
   try {
-  const cfg2=JSON.parse(localStorage.getItem('moonCfg')||'{}');
-  const allAddons2=cfg2._addons||[];
-  const addonNames2=S.addons.map(id=>{const a=allAddons2.find(x=>x.id===id);return a?a.name:id;});
-  const bk={id:`BK-${Date.now()}`,service:S.svc.name,price:S.svc.price,dur:S.svc.dur,addons:addonNames2,date:S.date,time:S.time,name,phone:fp,status:'confirmed',bookedAt:new Date().toISOString()};
+  const _cfg2=JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  const _allA=_cfg2._addons||[];
+  const _addonNames=S.addons.map(id=>{const a=_allA.find(x=>x.id===id);return a?a.name:id;});
+  const bk={id:`BK-${Date.now()}`,service:S.svc.name,price:S.svc.price,dur:S.svc.dur,addons:_addonNames,date:S.date,time:S.time,name,phone:fp,status:'confirmed',bookedAt:new Date().toISOString()};
   await saveBooking(bk);
   const dl=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   const payLabel = 'Cash at the shop';
@@ -1089,7 +1074,7 @@ async function confirmBooking(){
   const dlLong=new Date(S.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('sCard').innerHTML=`
     <div class="sr"><span class="k">Service</span><span class="v">${S.svc.name} — ${S.svc.price}</span></div>
-    ${addonNames2.length?`<div class="sr"><span class="k">Add-Ons</span><span class="v">${addonNames2.join(', ')}</span></div>`:''}
+    ${_addonNames.length?`<div class="sr"><span class="k">Add-Ons</span><span class="v">${_addonNames.join(', ')}</span></div>`:''}
     <div class="sr"><span class="k">Date</span><span class="v">${dlLong}</span></div>
     <div class="sr"><span class="k">Time</span><span class="v">${S.time}</span></div>
     <div class="sr"><span class="k">Confirmation</span><span class="v">${(()=>{const c=JSON.parse(localStorage.getItem('moonCfg')||'{}');return c.smsEnabled===false?'Barber will text you':'Text sent to '+phone;})()}</span></div>`;
@@ -1259,14 +1244,14 @@ function renderSuccessPayments() {
   const amt     = svc?.priceNum || (svc?.price || '').replace(/\D/g,'');
   const note    = encodeURIComponent(`${cfg.shopName || 'Barber'} - ${svc?.name || 'Cut'}`);
 
-  let html = `<div style="font-size:0.44rem;letter-spacing:0.22em;color:var(--dim);text-transform:uppercase;margin-bottom:10px;text-align:left">Payment</div>`;
+  let html = `<div style="font-size:0.44rem;letter-spacing:0.22em;color:var(--dim);text-transform:uppercase;margin-bottom:10px;text-align:left">Payment Options</div>`;
 
   // always show cash
   html += `<div style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:13px 16px;margin-bottom:7px">
     <span style="font-size:1.2rem">💵</span>
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--cut)">Cash at the shop</div>
-      <div style="font-size:0.46rem;letter-spacing:0.08em;color:var(--dim)">Pay when you arrive — no need to do anything now</div>
+      <div style="font-size:0.75rem;letter-spacing:0.04em;color:var(--dim);font-family:'DM Mono',monospace">Pay when you arrive — no need to do anything now</div>
     </div>
   </div>`;
 
@@ -1291,13 +1276,13 @@ function renderSuccessPayments() {
 
 function payBtn(icon, name, handle, url, color) {
   const inner = url
-    ? `<a href="${url}" target="_blank" style="margin-left:auto;background:${color};color:#fff;border-radius:3px;padding:6px 14px;font-size:0.46rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;white-space:nowrap;flex-shrink:0">Pay Now</a>`
-    : `<span style="margin-left:auto;font-size:0.46rem;letter-spacing:0.08em;color:var(--dim)">${handle}</span>`;
+    ? `<a href="${url}" target="_blank" style="margin-left:auto;background:${color};color:#fff;border-radius:3px;padding:8px 16px;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;white-space:nowrap;flex-shrink:0;font-family:'DM Mono',monospace">Pay Now</a>`
+    : `<span style="margin-left:auto;font-size:0.75rem;letter-spacing:0.04em;color:var(--cut);font-family:'DM Mono',monospace;font-weight:400">${handle}</span>`;
   return `<div style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:13px 16px;margin-bottom:7px">
-    <span style="font-size:1.2rem">${icon}</span>
-    <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--cut)">${name}</div>
-      <div style="font-size:0.46rem;letter-spacing:0.08em;color:var(--dim)">${handle}</div>
+    <span style="font-size:1.3rem;flex-shrink:0">${icon}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--cut);line-height:1;margin-bottom:4px">${name}</div>
+      <div style="font-size:0.75rem;letter-spacing:0.04em;color:var(--gold);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${handle}</div>
     </div>
     ${inner}
   </div>`;
