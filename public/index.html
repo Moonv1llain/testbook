@@ -1490,23 +1490,49 @@ function spinWheel() {
   _wheelSpinning = true;
   document.getElementById('wheelSpinBtn').disabled = true;
   document.getElementById('wheelResult').classList.remove('show');
+
+  // Pick prize by weight first, then calculate the exact final angle
+  // so the pointer lands precisely in the middle of that prize's slice
   _wheelPrize = pickWeightedPrize();
   const prizeIndex = WHEEL_PRIZES.indexOf(_wheelPrize);
-  const n = WHEEL_PRIZES.length;
+  const n   = WHEEL_PRIZES.length;
   const arc = (2 * Math.PI) / n;
-  const spins = 5 + Math.random() * 3;
-  const sliceMid = prizeIndex * arc + arc / 2;
-  const targetAngle = (spins * 2 * Math.PI) + (-Math.PI / 2 - sliceMid - (_wheelAngle % (2 * Math.PI)));
-  const duration = 4400;
-  const start = performance.now();
+
+  // Pointer is at top = -π/2 in canvas coords
+  // Slice i occupies angles: [_wheelAngle + i*arc, _wheelAngle + i*arc + arc]
+  // We want pointer at top to hit the middle of slice prizeIndex
+  // Final angle such that: finalAngle + prizeIndex*arc + arc/2 ≡ -π/2 (mod 2π)
+  // => finalAngle = -π/2 - prizeIndex*arc - arc/2
+  // Add full spins for drama, normalise so we always spin forward
+  const spins = 5 + Math.random() * 3; // 5-8 full rotations
+  const targetFinal = -Math.PI / 2 - (prizeIndex * arc + arc / 2);
+  // How much to rotate from current position to reach targetFinal
+  let delta = targetFinal - (_wheelAngle % (2 * Math.PI));
+  // Ensure we always spin forward (positive direction)
+  if (delta > 0) delta -= 2 * Math.PI;
+  const totalRotation = delta - spins * 2 * Math.PI; // negative = clockwise in canvas
+
+  const duration  = 4400;
+  const startTime = performance.now();
   const startAngle = _wheelAngle;
+
   function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
   function frame(now) {
-    const t = Math.min((now - start) / duration, 1);
-    _wheelAngle = startAngle + targetAngle * easeOut(t);
+    const t = Math.min((now - startTime) / duration, 1);
+    _wheelAngle = startAngle + totalRotation * easeOut(t);
     drawWheel(_wheelAngle);
-    if (t < 1) { requestAnimationFrame(frame); }
-    else { _wheelSpinning = false; showWheelResult(); }
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      // Double-check: read which slice the pointer actually lands on
+      // Pointer is at -π/2; normalise current angle and find slice
+      const norm = ((-_wheelAngle - Math.PI / 2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      const landed = Math.floor(norm / arc) % n;
+      _wheelPrize = WHEEL_PRIZES[landed] || WHEEL_PRIZES[prizeIndex];
+      _wheelSpinning = false;
+      showWheelResult();
+    }
   }
   requestAnimationFrame(frame);
 }
