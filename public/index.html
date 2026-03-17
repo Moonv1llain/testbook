@@ -857,11 +857,11 @@ function applySettings(saved) {
 (async()=>{
   document.getElementById('hdrDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
 
-  // 1. Apply localStorage immediately (barber's own device — instant)
+  // 1. Apply localStorage immediately — instant on returning devices
   const localCfg = JSON.parse(localStorage.getItem('moonCfg') || '{}');
   applySettings(localCfg);
 
-  // 2. Fetch cloud settings — applies to ALL devices (customers included)
+  // 2. ONE fetch for everything — settings + bookings in a single call
   try {
     const binId  = MOON_CONFIG.JSONBIN_BIN_ID;
     const binKey = MOON_CONFIG.JSONBIN_API_KEY;
@@ -869,19 +869,26 @@ function applySettings(saved) {
       const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers:{'X-Master-Key':binKey} });
       if(r.ok) {
         const { record } = await r.json();
-       if(record.settings) {
-          // cache to localStorage so next load is instant
+        _cachedRecord = record;
+
+        // apply settings
+        if(record.settings) {
           localStorage.setItem('moonCfg', JSON.stringify(record.settings));
           applySettings(record.settings);
-          // re-render everything now that real cloud settings are applied
-          renderSvcs();
-          renderDates();
-          renderTimes();
-          updateFooter();
+          if(record.settings._blocks)   localStorage.setItem('moonBlocks',   JSON.stringify(record.settings._blocks));
+          if(record.settings._dayHours) localStorage.setItem('moonDayHours', JSON.stringify(record.settings._dayHours));
+          if(record.settings._workDays) MOON_CONFIG.WORK_DAYS = record.settings._workDays;
         }
+
+        // load booked slots
+        S.bookedSlots = {};
+        (record.bookings||[]).filter(b=>b.status!=='cancelled').forEach(b=>{
+          if(!S.bookedSlots[b.date]) S.bookedSlots[b.date]=[];
+          S.bookedSlots[b.date].push(b.time);
+        });
       }
     }
-  } catch(e) { /* no cloud — fall back to whatever we applied from localStorage */ }
+  } catch(e) { /* fall back to localStorage */ }
 
   // apply custom page copy
   const saved = JSON.parse(localStorage.getItem('moonCfg')||'{}');
@@ -902,20 +909,16 @@ function applySettings(saved) {
   applyGallery();
   applyQuickText();
   applyWalkinMode();
- renderSvcs();
-  await loadBookings();
+  renderSvcs();
   renderDates();
-  // auto-select today if it's in the date strip, else select the first available day
   if (!S.date) {
     const firstDay = document.querySelector('#dateStrip .dc');
     if (firstDay) {
       const ds = firstDay.getAttribute('onclick').match(/'([^']+)'/)[1];
       S.date = ds;
-      renderDates(); // re-render to show selected state
+      renderDates();
     }
   }
-  // re-render everything after cloud data is fully loaded
-  renderDates();
   renderTimes();
   updateFooter();
 })();
@@ -1257,11 +1260,13 @@ async function sendSMS(to,body){
 }
 
 async function sendBookingEmail(bk, dl) {
+  // ── EMAIL KILL SWITCH — set emailEnabled: true in dashboard to turn on ──
+  const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
+  if (cfg.emailEnabled !== true) return;
   try {
-    const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
     const shopName = cfg.shopName || MOON_CONFIG.SHOP_NAME || 'Your Barber';
     const addonStr = bk.addons && bk.addons.length ? bk.addons.join(', ') : 'None';
-    const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1282,9 +1287,7 @@ async function sendBookingEmail(bk, dl) {
         }
       })
     });
-    const txt = await res.text();
-    console.log('EmailJS status:', res.status, txt);
-  } catch(e) { console.error('EmailJS error:', e); }
+  } catch(e) { /* silent */ }
 }
 
 function resetBooking(){
