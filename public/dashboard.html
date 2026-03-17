@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dashboard — Zoocutz</title>
+<title>Dashboard — S2karinaa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
@@ -729,7 +729,7 @@ body{
 
 <!-- ══ PIN SCREEN ══ -->
 <div id="pinScreen">
-  <div class="pin-wordmark" id="pinLogo">Zoocutz</div>
+  <div class="pin-wordmark" id="pinLogo">Karina</div>
   <div class="pin-tagline">Barber Dashboard</div>
   <div class="pin-dots" id="pinDots">
     <div class="pin-dot" id="pd0"></div>
@@ -1168,6 +1168,14 @@ body{
         <div class="toggle-row">
           <div class="toggle-info"><div class="tl">Send confirmation texts via Twilio</div><div class="td" style="color:#c07060">Keep OFF until your A2P campaign is approved</div></div>
           <div class="tog" id="togSms" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="cfg-section">Email Notifications (EmailJS)</div>
+      <div class="block-form settings-row">
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="tl">Send booking email to barber</div><div class="td">Sends an email when a client books — turn on once your email account is ready</div></div>
+          <div class="tog" id="togEmail" onclick="this.classList.toggle('on')"></div>
         </div>
       </div>
 
@@ -2230,6 +2238,8 @@ function renderSettings() {
   // sms toggle — on by default, off only if explicitly disabled
   if(C.smsEnabled === true) document.getElementById('togSms')?.classList.add('on');
   else document.getElementById('togSms')?.classList.remove('on');
+  if(C.emailEnabled === true) document.getElementById('togEmail')?.classList.add('on');
+  else document.getElementById('togEmail')?.classList.remove('on');
   // other tabs
   renderVacationTab();
   renderGalleryTab();
@@ -2251,7 +2261,8 @@ function saveSettings() {
   CFG.binId     = v('cfgBinId');
   CFG.binKey    = v('cfgBinKey');
   CFG.sms       = v('cfgSms');
-  CFG.smsEnabled = document.getElementById('togSms').classList.contains('on');
+  CFG.smsEnabled   = document.getElementById('togSms').classList.contains('on');
+  CFG.emailEnabled = document.getElementById('togEmail')?.classList.contains('on') || false;
   if(document.getElementById('cfgCustomSms')) CFG.customSms = document.getElementById('cfgCustomSms').value.trim();
   persist();
   if(CFG.shopName) document.querySelector('.sb-logo-main').textContent = CFG.shopName;
