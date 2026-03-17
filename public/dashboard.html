@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dashboard — ZOOCUTZ</title>
+<title>Dashboard — Zoocutz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
@@ -681,18 +681,55 @@ body{
 .font-card-name{font-size:1.4rem;color:var(--ink);margin-bottom:4px;line-height:1.2}
 .font-card-desc{font-size:0.38rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
 
-/* ── SWATCH active state (JS uses .active not .sel) ── */
-.swatch.active{border-color:var(--ink)!important;transform:scale(1.15)}
+/* ── LOYALTY / PRIZES ── */
+.prize-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#fdf8ee;border:1.5px solid #d4b86a;border-radius:20px;
+  padding:3px 10px;font-size:0.4rem;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--gold);white-space:nowrap;
+}
+.prize-badge.redeemed{background:var(--paper2);border-color:var(--rule);color:var(--dim);text-decoration:line-through}
+.cl-prizes{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.loyalty-banner{
+  background:#fffbf0;border-bottom:1px solid #e8d898;
+  padding:10px 20px;display:flex;align-items:center;gap:10px;
+}
+.loyalty-banner-icon{font-size:1.4rem}
+.loyalty-banner-text{font-size:0.46rem;letter-spacing:0.06em;color:var(--gold);line-height:1.6}
+.redeem-btn{
+  margin-left:auto;background:var(--gold);color:#fff;border:none;border-radius:8px;
+  padding:7px 14px;font-size:0.44rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;white-space:nowrap;transition:opacity 0.15s;flex-shrink:0;
+}
+.redeem-btn:hover{opacity:0.85}
+.prize-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--paper);gap:12px;
+}
+.prize-row-info{flex:1}
+.prize-row-name{font-family:var(--display);font-size:1rem;color:var(--ink);margin-bottom:2px}
+.prize-row-date{font-size:0.4rem;letter-spacing:0.08em;color:var(--dim)}
+.prize-row.redeemed .prize-row-name{color:var(--dim);text-decoration:line-through}
 
-/* ── stat-label alias (JS emits stat-label, CSS only had stat-lbl) ── */
-.stat-label{font-size:0.45rem;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+/* ── WHEEL PRIZE EDITOR ── */
+.wheel-prize-row{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--rule);background:var(--paper)}
+.wheel-prize-swatch{width:18px;height:18px;border-radius:4px;flex-shrink:0;border:1.5px solid var(--rule)}
+.wheel-prize-name{flex:1;font-family:var(--display);font-size:0.95rem;color:var(--ink)}
+.wheel-prize-weight{font-size:0.44rem;letter-spacing:0.08em;color:var(--dim);min-width:60px;text-align:center}
+.wheel-prize-tog{width:34px;height:20px;border-radius:10px;background:var(--rule);border:1.5px solid var(--rule2);position:relative;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+.wheel-prize-tog::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:2px;left:2px;transition:all 0.2s}
+.wheel-prize-tog.on{background:#8fc29a;border-color:#6aad7c}
+.wheel-prize-tog.on::after{transform:translateX(14px)}
+.wheel-prize-del{background:none;border:none;color:var(--dim2);font-size:1rem;cursor:pointer;padding:2px 4px;transition:color 0.15s}
+.wheel-prize-del:hover{color:var(--red)}
+
 </style>
 </head>
 <body>
 
 <!-- ══ PIN SCREEN ══ -->
 <div id="pinScreen">
-  <div class="pin-wordmark" id="pinLogo">ZoocutZ</div>
+  <div class="pin-wordmark" id="pinLogo">Zoocutz</div>
   <div class="pin-tagline">Barber Dashboard</div>
   <div class="pin-dots" id="pinDots">
     <div class="pin-dot" id="pd0"></div>
@@ -781,6 +818,10 @@ body{
         <div class="sec-hdr-sub" id="clientCount"></div>
       </div>
     </div>
+    <div id="loyaltyBanner" style="display:none" class="loyalty-banner">
+      <div class="loyalty-banner-icon">🎰</div>
+      <div class="loyalty-banner-text" id="loyaltyBannerText"></div>
+    </div>
     <div class="search-bar">
       <input type="text" id="clientSearch" placeholder="Search name or phone…" oninput="renderClients()">
     </div>
@@ -862,6 +903,7 @@ body{
       <div class="stab" onclick="showStab('gallery',this)">Photos</div>
       <div class="stab" onclick="showStab('reviews',this)">Reviews</div>
       <div class="stab" onclick="showStab('vacation',this)">Vacation</div>
+      <div class="stab" onclick="showStab('wheel',this)">🎰 Wheel</div>
       <div class="stab" onclick="showStab('keys',this)">Advanced</div>
     </div>
 
@@ -1081,6 +1123,42 @@ body{
         <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Message to clients</label><textarea class="bf-input" id="cfgVacaMsg" rows="3" placeholder="Taking a week off. Back on March 20th — can't wait to see you." style="resize:vertical"></textarea></div>
       </div>
       <button class="big-save" onclick="saveVacation()">Save Vacation ✓</button>
+    </div>
+
+    <!-- TAB: LUCKY WHEEL -->
+    <div class="stab-panel" id="stab-wheel">
+      <div class="cfg-section">Lucky Wheel</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.9">After a booking is confirmed, there's a random chance the spin wheel appears. Clients spin to win a prize — you control what's on it and how often it triggers.</div>
+
+      <div class="block-form settings-row" style="margin-top:0">
+        <div class="toggle-row" style="margin-bottom:16px">
+          <div class="toggle-info"><div class="tl">Enable Lucky Wheel</div><div class="td">Show spin wheel after booking (random chance)</div></div>
+          <div class="tog on" id="togWheel" onclick="this.classList.toggle('on')"></div>
+        </div>
+
+        <label class="bf-label">Trigger Chance — 1 in X bookings</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <input type="range" min="2" max="20" value="6" id="wheelOdds" oninput="document.getElementById('wheelOddsVal').textContent='1 in '+this.value" style="flex:1">
+          <span class="range-val" id="wheelOddsVal" style="min-width:48px">1 in 6</span>
+        </div>
+        <div style="font-size:0.42rem;color:var(--dim);margin-top:-10px;margin-bottom:16px;line-height:1.7">Lower = more frequent. 1 in 6 means ~1 winner every 6 bookings on average.</div>
+      </div>
+
+      <div class="cfg-section">Wheel Prizes</div>
+      <div style="font-size:0.44rem;color:var(--dim);padding:10px 20px 0;line-height:1.8">Add prizes, set a weight (higher = more common), and toggle each one on/off. At least one prize must be active.</div>
+      <div id="wheelPrizeList" style="margin-top:4px"></div>
+
+      <div class="block-form" style="border-top:1px solid var(--rule);padding-top:14px">
+        <div class="cfg-section" style="padding:0 0 10px;border:none;margin:0">Add New Prize</div>
+        <div style="display:grid;grid-template-columns:1fr 70px 50px auto;gap:8px;align-items:end">
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Prize Name</label><input class="bf-input" id="newPrizeName" placeholder="e.g. Free Design"></div>
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Weight</label><input class="bf-input" id="newPrizeWeight" type="number" min="1" max="100" value="10" placeholder="10"></div>
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">Color</label><input class="bf-input" id="newPrizeColor" type="color" value="#1a1a1a" style="padding:4px;height:40px;cursor:pointer"></div>
+          <div class="bf-group" style="margin-bottom:0"><label class="bf-label">&nbsp;</label><button class="add-svc-btn" onclick="addWheelPrize()" style="white-space:nowrap">+ Add</button></div>
+        </div>
+      </div>
+
+      <button class="big-save" onclick="saveWheelSettings()">Save Wheel Settings ✓</button>
     </div>
 
     <!-- TAB: API KEYS / ADVANCED -->
@@ -1741,6 +1819,17 @@ function renderClients() {
 
   document.getElementById('clientCount').textContent = `${clients.length} client${clients.length!==1?'s':''}`;
 
+  // Loyalty banner — count pending prizes across all clients
+  const allPending = DATA.clients.reduce((acc, c) => acc + (c.prizes||[]).filter(p=>!p.redeemed).length, 0);
+  const banner = document.getElementById('loyaltyBanner');
+  if (allPending > 0) {
+    document.getElementById('loyaltyBannerText').textContent =
+      `${allPending} pending prize${allPending!==1?'s':''} — tap a client to mark as redeemed`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
   const grid = document.getElementById('clientGrid');
   if (!clients.length) {
     grid.innerHTML = `<div class='empty-state'><div class='empty-icon'>👥</div><div class='empty-label'>No clients yet</div></div>`;
@@ -1749,11 +1838,19 @@ function renderClients() {
 
   grid.innerHTML = clients.map(c => {
     const lastDate = c.lastVisit ? new Date(c.lastVisit+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+    const pendingPrizes = (c.prizes||[]).filter(p => !p.redeemed);
+    const prizeBadges = pendingPrizes.slice(0,2).map(p =>
+      `<span class="prize-badge">🎰 ${p.prize}</span>`
+    ).join('');
     return `<div class="swipe-wrap" data-id="${c.phone}" data-type="client">
       <div class="swipe-inner">
         <div class="cl-row" onclick="viewClient('${c.phone}')">
           <div class="cl-avatar">${(c.name||'??')[0].toUpperCase()}</div>
-          <div class="cl-info"><div class="cl-name">${c.name||'Unknown'}</div><div class="cl-phone">${c.phone||'—'} · Last: ${lastDate}</div></div>
+          <div class="cl-info">
+            <div class="cl-name">${c.name||'Unknown'}</div>
+            <div class="cl-phone">${c.phone||'—'} · Last: ${lastDate}</div>
+            ${prizeBadges ? `<div class="cl-prizes">${prizeBadges}</div>` : ''}
+          </div>
           <div class="cl-visits-wrap"><div class="cl-count">${c.visits||0}</div><div class="cl-count-lbl">visits</div></div>
         </div>
       </div>
@@ -1769,13 +1866,36 @@ function viewClient(phone) {
   const clientBks = DATA.bookings.filter(b => b.phone === phone && b.status === 'confirmed')
     .sort((a,b) => b.date.localeCompare(a.date));
 
+  const prizes = c.prizes || [];
+  const pending  = prizes.filter(p => !p.redeemed);
+  const redeemed = prizes.filter(p => p.redeemed);
+
+  const prizeSection = prizes.length ? `
+    <div style="margin-top:14px;font-size:12px;letter-spacing:0.22em;color:var(--gold);text-transform:uppercase;margin-bottom:8px">🎰 Lucky Wheel Prizes</div>
+    ${pending.map((p, i) => `
+      <div class="prize-row">
+        <div class="prize-row-info">
+          <div class="prize-row-name">${p.prize}</div>
+          <div class="prize-row-date">Won ${p.date} · Pending</div>
+        </div>
+        <button class="redeem-btn" onclick="redeemPrize('${phone}', ${prizes.indexOf(p)})">Mark Redeemed</button>
+      </div>`).join('')}
+    ${redeemed.map(p => `
+      <div class="prize-row redeemed">
+        <div class="prize-row-info">
+          <div class="prize-row-name">${p.prize}</div>
+          <div class="prize-row-date">Won ${p.date} · Redeemed ${p.redeemedDate||''}</div>
+        </div>
+        <span style="font-size:0.4rem;letter-spacing:0.1em;color:var(--dim);text-transform:uppercase">Done ✓</span>
+      </div>`).join('')}
+  ` : '';
+
   document.getElementById('modalTitle').textContent = c.name || 'Client';
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-row"><span class="k">Phone</span><span class="v">${c.phone}</span></div>
     <div class="modal-row"><span class="k">Total Visits</span><span class="v">${c.visits||0}</span></div>
-    <div class="modal-row"><span class="k">Points</span><span class="v">${c.points||0} pts</span></div>
-    <div class="modal-row"><span class="k">Streak</span><span class="v">${c.streak||0}</span></div>
     <div class="modal-row"><span class="k">Member Since</span><span class="v">${c.joinDate||'—'}</span></div>
+    ${prizeSection}
     <div style="margin-top:14px;font-size:12px;letter-spacing:0.22em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Recent Bookings</div>
     ${clientBks.slice(0,5).map(b=>{
       const dl = new Date(b.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -1784,6 +1904,22 @@ function viewClient(phone) {
   `;
   document.getElementById('modalFooter').innerHTML = `<button class="act-btn" onclick="closeModal()">Close</button>`;
   openModal();
+}
+
+// ── REDEEM PRIZE ─────────────────────────────────────────
+async function redeemPrize(phone, prizeIndex) {
+  const c = DATA.clients.find(x => x.phone === phone);
+  if (!c || !c.prizes || !c.prizes[prizeIndex]) return;
+  c.prizes[prizeIndex].redeemed     = true;
+  c.prizes[prizeIndex].redeemedDate = new Date().toISOString().split('T')[0];
+  try {
+    await saveData();
+    toast(`Prize redeemed for ${c.name} ✓`, 'ok');
+    closeModal();
+    renderClients();
+  } catch(e) {
+    toast('Could not save — check connection', 'err');
+  }
 }
 
 // ── BOOKING ACTIONS ───────────────────────────────────────
@@ -2047,6 +2183,7 @@ function showStab(name, el) {
   if(name==='addons')     renderAddonEditor();
   if(name==='appearance'){ renderSwatches(); renderThemeGrid(); renderFontGrid(); }
   if(name==='reviews')    loadDashReviews();
+  if(name==='wheel')      renderWheelTab();
 }
 
 // ── RENDER SETTINGS ───────────────────────────────────────
@@ -2096,6 +2233,7 @@ function renderSettings() {
   // other tabs
   renderVacationTab();
   renderGalleryTab();
+  renderWheelTab();
   loadDashReviews();
 }
 
@@ -2516,6 +2654,88 @@ function renderGalleryTab() {
   if(CFG.photos?.length) g('cfgPhotos').value = CFG.photos.join('\n');
   if(CFG.about)  g('cfgAbout').value  = CFG.about;
   if(CFG.customSms && g('cfgCustomSms')) g('cfgCustomSms').value = CFG.customSms;
+}
+
+// ── LUCKY WHEEL SETTINGS ──────────────────────────────────
+const DEFAULT_WHEEL_PRIZES = [
+  { label: '$5 Off',        weight: 30, color: '#2a2218', active: true },
+  { label: 'Free Design',   weight:  8, color: '#1a1008', active: true },
+  { label: 'Free Add-On',   weight: 22, color: '#1c1a12', active: true },
+  { label: 'Free Eyebrows', weight: 14, color: '#141210', active: true },
+  { label: '$10 Off',       weight: 10, color: '#120e08', active: true },
+  { label: 'Free Beard',    weight: 16, color: '#181410', active: true },
+];
+
+function getWheelPrizes() {
+  return CFG._wheelPrizes && CFG._wheelPrizes.length ? CFG._wheelPrizes : DEFAULT_WHEEL_PRIZES;
+}
+
+function renderWheelPrizeList() {
+  const prizes = getWheelPrizes();
+  const list = document.getElementById('wheelPrizeList');
+  if (!list) return;
+  const totalWeight = prizes.filter(p => p.active !== false).reduce((a, p) => a + p.weight, 0);
+  list.innerHTML = prizes.map((p, i) => {
+    const pct = p.active !== false ? Math.round((p.weight / totalWeight) * 100) : 0;
+    return `<div class="wheel-prize-row">
+      <div class="wheel-prize-swatch" style="background:${p.color}"></div>
+      <div class="wheel-prize-name">${p.label}</div>
+      <div class="wheel-prize-weight">${p.active !== false ? pct + '% chance' : 'Off'}</div>
+      <div class="wheel-prize-tog ${p.active !== false ? 'on' : ''}" onclick="toggleWheelPrize(${i})"></div>
+      <button class="wheel-prize-del" onclick="deleteWheelPrize(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleWheelPrize(i) {
+  const prizes = getWheelPrizes();
+  const active = prizes.filter((p, j) => j !== i && p.active !== false).length;
+  if (active === 0 && prizes[i].active !== false) { toast('Keep at least one prize active', 'err'); return; }
+  prizes[i].active = prizes[i].active === false ? true : false;
+  CFG._wheelPrizes = prizes;
+  renderWheelPrizeList();
+}
+
+function deleteWheelPrize(i) {
+  const prizes = getWheelPrizes();
+  if (prizes.filter(p => p.active !== false).length <= 1 && prizes[i].active !== false) {
+    toast('Keep at least one prize active', 'err'); return;
+  }
+  prizes.splice(i, 1);
+  CFG._wheelPrizes = prizes;
+  renderWheelPrizeList();
+  toast('Prize removed', 'ok');
+}
+
+function addWheelPrize() {
+  const name   = document.getElementById('newPrizeName').value.trim();
+  const weight = parseInt(document.getElementById('newPrizeWeight').value) || 10;
+  const color  = document.getElementById('newPrizeColor').value || '#1a1a1a';
+  if (!name) { toast('Enter a prize name', 'err'); return; }
+  const prizes = getWheelPrizes();
+  prizes.push({ label: name, weight, color, active: true });
+  CFG._wheelPrizes = prizes;
+  document.getElementById('newPrizeName').value = '';
+  document.getElementById('newPrizeWeight').value = '10';
+  renderWheelPrizeList();
+  toast(`"${name}" added to wheel`, 'ok');
+}
+
+function saveWheelSettings() {
+  CFG.wheelEnabled = document.getElementById('togWheel').classList.contains('on');
+  CFG.wheelOdds    = parseInt(document.getElementById('wheelOdds').value) || 6;
+  CFG._wheelPrizes = getWheelPrizes();
+  persist();
+  toast('Wheel settings saved ✓', 'ok');
+}
+
+function renderWheelTab() {
+  const odds = CFG.wheelOdds || 6;
+  const el = document.getElementById('wheelOdds');
+  if (el) { el.value = odds; document.getElementById('wheelOddsVal').textContent = '1 in ' + odds; }
+  if (CFG.wheelEnabled === false) document.getElementById('togWheel')?.classList.remove('on');
+  else document.getElementById('togWheel')?.classList.add('on');
+  renderWheelPrizeList();
 }
 
 // ── PERSIST (save everything to localStorage) ─────────────
