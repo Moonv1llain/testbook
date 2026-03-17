@@ -1282,7 +1282,9 @@ async function sendBookingEmail(bk, dl) {
         }
       })
     });
-  } catch(e) { /* silent — booking already saved, email is best-effort */ }
+    const txt = await res.text();
+    console.log('EmailJS status:', res.status, txt);
+  } catch(e) { console.error('EmailJS error:', e); }
 }
 
 function resetBooking(){
