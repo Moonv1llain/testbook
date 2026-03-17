@@ -1261,12 +1261,12 @@ async function sendBookingEmail(bk, dl) {
     const cfg = JSON.parse(localStorage.getItem('moonCfg')||'{}');
     const shopName = cfg.shopName || MOON_CONFIG.SHOP_NAME || 'Your Barber';
     const addonStr = bk.addons && bk.addons.length ? bk.addons.join(', ') : 'None';
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         service_id:  'service_jejd9ob',
-        template_id: 's3wo7gm',
+        template_id: 'template_x0qhi6s',
         user_id:     'MnEolAOk3-7SdAppx',
         template_params: {
           to_email:     'zoocutz805@outlook.com',
